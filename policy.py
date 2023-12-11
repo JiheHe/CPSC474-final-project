@@ -3,8 +3,10 @@ from abc import ABC, abstractmethod
 class RummyPolicy(ABC):
   '''The abstract class for the policy needed for Rummy'''
 
-  def __init__():
-    pass
+  # NOTE: during concrete implementation, PLEASE treat the Card objects from "hand" arguments by-reference,
+  # i.e. don't mess them up and please return the Card objects the same references as they as passed in,
+  # instaed of potentially passing back new cards. The game logic requires by-reference logic to work.
+  # Takes some effort to transform to suit/rank comparison instead of reference comparison at the moment.
 
   @abstractmethod
   def draw(self, hand, player_index, scores, discard_pile_top_card, num_cards_stock_pile, meld_turn_count, melds):
