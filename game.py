@@ -1,4 +1,5 @@
 '''Courtesy of CPSC474 FA23 Proj4'''
+'''NOTE: this file is USELESS ATM.'''
 
 from abc import ABC, abstractmethod
 

@@ -1,4 +1,4 @@
-'''Courtesy of CPSC474 FA23 Proj4'''
+'''Courtesy of CPSC474 FA23 Proj4, with some modification from me'''
 
 import itertools as it
 import random
@@ -26,7 +26,13 @@ class Card:
 
     def same_suit(self, other):
         return self._suit == other._suit
-
+    
+    def same_rank(self, other):
+        return self._rank == other._rank
+    
+    def __lt__(self, other):
+        # Define less-than for sorting based on the rank attribute.
+        return self._rank < other.rank
 
     def __repr__(self):
         return "[" + Card.rank_str[self._rank] + str(self._suit) + "]"
