@@ -238,5 +238,5 @@ class Game:
     for g in range(count):
       game_winners, max_score = self.play(policies, lambda mess: None)  # no log function for now.
       for winner in game_winners:  # update for all winners.
-        wins[winner] += 1
+        wins[winner] += 1 / len(game_winners)  # this ensures the final total adds to 100%
     return [win / count for win in wins]
