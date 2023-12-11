@@ -9,7 +9,7 @@ class RummyPolicy(ABC):
   # Takes some effort to transform to suit/rank comparison instead of reference comparison at the moment.
 
   @abstractmethod
-  def draw(self, hand, player_index, scores, discard_pile_top_card, num_cards_stock_pile, meld_turn_count, melds):
+  def draw(self, hand, player_index, scores, discard_pile_top_card, num_cards_stock_pile, num_turnover, meld_turn_count, melds):
     '''
       The draw policy for rummy.
       Input:
@@ -18,6 +18,7 @@ class RummyPolicy(ABC):
         scores: List[int] - the game scores of all existing players in the game.
         discard_pile_top_card: Card - topmost visible card of the discard pile
         num_cards_stock_pile: int - number of cards left in the stock pile
+        num_turnover: int - number of times the stock piles have been turned over so far. Game ends at final burnthough.
         meld_turn_count: List[int] - numbers of turns where melding is used for all existing player in the game.
         melds: List[Tuple(List[Card], String)] - all melds on the table, each in the manner of (all cards in the meld, meld's type).
                                                   meld's type is either "n_of_a_kind" or "same_suit_seq"

@@ -20,6 +20,8 @@ class Game:
     self.WINNING_SCORE = 100  # TUNABLE. Winning score required for the game winner.
     self.NUM_PLAYERS = 2  # TUNABLE. Number of players/policies in the game.
     self.NUM_CARDS_INIT = 10  # TUNABLE. Number of cards to deal to each player at the start of each round.
+    self.NUM_TURNOVER_TILL_ROUND_TIE = 2  # TUNABLE. Number of stock decks to burn through before this round is a tie.
+    self.NUM_POINTS_FOR_TIE = 5  # TUNABLE. Number of points to award to each player at the case of tie.
     self.ALL_RANKS = range(1, 14)  # constant
     self.ALL_SUITS = ['S', 'H', 'D', 'C']  # constant
     self.PLAYERS = range(self.NUM_PLAYERS)  # constant
@@ -32,6 +34,9 @@ class Game:
   
   def round_ends(self, hands):
     return 0 in [len(hand) for hand in hands]  # round ends when a player is out of cards
+  
+  def tie(self, num_turnover, stock_length):
+    return num_turnover == self.NUM_TURNOVER_TILL_ROUND_TIE and stock_length == 0  # round is tie when burn through the deck enough times and last stock is finished.
   
   def _remove_from_hand(self, hand, cards_to_remove):
     # Copied over and slightly modified from deck's logic
@@ -87,10 +92,15 @@ class Game:
       melds = []  # the list of all melds (matched set) on the table. Tuple ([cards], type) "n_of_a_kind, same_suit_seq"
       # Note: here, "top of the pile" refers to "end of the list"
       rummy_factor = 1  # for the special rummy case.
+      num_turnover = 0  # the number of discard -> new stock "turnover" in the round so far.
 
       # Play
-      while not self.round_ends(hands):
+      while not (self.round_ends(hands) or self.tie(num_turnover, stock.size())):
         for p in self.PLAYERS:
+          # Check if the game is tie now.
+          if self.tie(num_turnover, stock.size()):  # stock has been burned through num_turnover amount of times. Tie.
+            break
+
           # Draw
           # Draw Policy either returns "stock" for drawing the top card from stock or "discard" for taking the top card from discard pile.
           draw_policy = policies[p].draw(hands[p],  # your hand
@@ -98,6 +108,7 @@ class Game:
                                   scores[:],  # all players' scores
                                   discard[-1],  # top visible card of the discard pile
                                   stock.size(),  # num cards left of the stock pile
+                                  num_turnover,  # the current number of turnovers so far
                                   meld_turn_count,  # number of turns where melding is used for each player
                                   melds)  # all melds on the table
           card_drawn_from_discard_pile = None
@@ -105,6 +116,7 @@ class Game:
             if stock.size() == 0:  # stock pile is empty
               stock._cards = list(reversed(discard))  # turn over the discard pile and use it as the new stock pile
               discard = []  # discard pile is gone now. But no worry! This player will have to discard anyway.
+              num_turnover += 1  # record this turnover
             hands[p] += stock.deal(1)  # draw 1 card from the top
           elif draw_policy == "discard":  # take the top card from discard pile
             top_card = discard.pop()
@@ -186,16 +198,20 @@ class Game:
           discard.append(discard_policy[0])  # put faceup onto the discard pile
 
       # End Round
-      round_winner = [i for i in range(len(hands)) if len(hands[i]) == 0][0]  # should only have 1 winner
-      # winner get rid of all cards all at once, without any previous putdown or laid off (i.e. no optional)
-      if meld_turn_count[round_winner] == 1:
-        rummy_factor = 2  # everyone pays double!
-      # Rest of the players pay up the pip value of remaining cards to the winner.
-      for p in self.PLAYERS:
-        pip_sum = 0
-        for card in hands[p]:  # winner would have no cards.
-          pip_sum += card.rank() if card.rank() <= 10 else 10  # Ace = 1, face cards = 10, rest rank value.
-        scores[round_winner] += pip_sum * rummy_factor  # Pay the same as before, or pay double
+      if self.round_ends(hands):  # If the game ended because tie, then nothing happens
+        round_winner = [i for i in range(len(hands)) if len(hands[i]) == 0][0]  # should only have 1 winner
+        # winner get rid of all cards all at once, without any previous putdown or laid off (i.e. no optional)
+        if meld_turn_count[round_winner] == 1:
+          rummy_factor = 2  # everyone pays double!
+        # Rest of the players pay up the pip value of remaining cards to the winner.
+        for p in self.PLAYERS:
+          pip_sum = 0
+          for card in hands[p]:  # winner would have no cards.
+            pip_sum += card.rank() if card.rank() <= 10 else 10  # Ace = 1, face cards = 10, rest rank value.
+          scores[round_winner] += pip_sum * rummy_factor  # Pay the same as before, or pay double
+      else:  # result of a tie, everyone gains some points
+        for p in self.PLAYERS:
+          scores[p] += self.NUM_POINTS_FOR_TIE
 
       # Starting player alternates (or move to the next) next round
       self.PLAYERS = self.PLAYERS[1:] + self.PLAYERS[:1]  # NOTE: hopefully doesn't lead to bugs.

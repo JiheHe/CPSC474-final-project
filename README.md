@@ -27,9 +27,12 @@ End Round:
     *Here we say the winner gains that many points
   A player goes "rummy" when they get rid of all cards in their hand at once, without previously having put down or laid off any cards (i.e. no optional). In this event, every other player pays double - twice what opponents would otherwise owe.
 
-Quick modification (borrowed from Gin Rummy):
-For every GAME, the player that reaches 100 points first wins.
+Quick modification:
+For every GAME, the player that reaches 100 points first wins, or the player with the most points if multiple players are beyond 100.
+If the stock deck gets burned through 2 times, then the game ends in a tie where everyone gains 5 points.
+  *More specifically, the turnover is the specific action of discard pile -> new stock. If this happens 2 times already and on the
+  current player's turn, the stock is gone, then the game ends in a tie immediately. 
 
 # NOTE:
 This game is a zero-sum game.
-The game generally converges. Don't think there's a need to code a tie condition, as such "went through the deck twice."
+The game generally converges. But tie condition is implemented so the playout doesn't go on a long time by chance.
