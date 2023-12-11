@@ -86,7 +86,7 @@ class Game:
       # Setup
       # deal cards
       stock, dealt = self.deal(self.NUM_PLAYERS * self.NUM_CARDS_INIT + 1)  # deal num_players * num of cards per player plus the discard; stock is the remaining deck
-      hands = [dealt[self.NUM_CARDS_INIT * p : self.NUM_CARDS_INIT * (p + 1)] for p in self.PLAYERS]  # [p0_hand, p1_hand]
+      hands = [dealt[self.NUM_CARDS_INIT * p : self.NUM_CARDS_INIT * (p + 1)] for p in range(self.NUM_PLAYERS)]  # [p0_hand, p1_hand]
       meld_turn_count = [0 for p in self.PLAYERS]  # tracks the number of turns where melding is used for each player.
       discard = [dealt[-1]]  # the discard pile starts with a card from stock, hence the +1 earlier
       melds = []  # the list of all melds (matched set) on the table. Tuple ([cards], type) "n_of_a_kind, same_suit_seq"
@@ -218,9 +218,12 @@ class Game:
 
     # Game ends, return the stats
     max_score = max(scores)  # Find the maximum value in the list
-    game_winner = scores.index(max_score)  # Find the index of the maximum value
-    log(f"Game winner: player {game_winner} with score {max_score}")
-    return game_winner, max_score
+    game_winners = []  # ideally only 1 winner, oh well.
+    for i in range(self.NUM_PLAYERS):
+      if scores[i] == max_score:
+        game_winners.append(i)  # Find the index of the maximum value
+    log(f"Game winner: player {game_winners} with score {max_score}")
+    return game_winners, max_score
   
   def evaluate_policies(self, policies, count):
     '''
@@ -233,6 +236,7 @@ class Game:
     '''
     wins = [0 for p in self.NUM_PLAYERS]
     for g in range(count):
-      game_winner, max_score = self.play(policies, lambda mess: None)  # no log function for now.
-      wins[game_winner] += 1
+      game_winners, max_score = self.play(policies, lambda mess: None)  # no log function for now.
+      for winner in game_winners:  # update for all winners.
+        wins[winner] += 1
     return [win / count for win in wins]

@@ -32,6 +32,7 @@ For every GAME, the player that reaches 100 points first wins, or the player wit
 If the stock deck gets burned through 2 times, then the game ends in a tie where everyone gains 5 points.
   *More specifically, the turnover is the specific action of discard pile -> new stock. If this happens 2 times already and on the
   current player's turn, the stock is gone, then the game ends in a tie immediately. 
+If there are multiple winners in a round (i.e. share the same max points), then a win is counted separately for each winning player.
 
 # NOTE:
 This game is a zero-sum game.
