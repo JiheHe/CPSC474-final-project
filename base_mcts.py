@@ -14,7 +14,7 @@ class Node:
     self.state = state
     self.actions_cache = state.get_actions()
 
-def mcts_draw_policy(allowed_time):
+def base_mcts_policy(allowed_time):
   '''
   Input:
     allowed_time - time budget for the MCTS computation for this round of game, in seconds
@@ -75,7 +75,7 @@ def compute_UCT(child_node, parent_node):
     exploit = child_node.total_reward / child_node.visit_count  # both parties will exploit
     explore = math.sqrt(N * math.log(parent_node.visit_count) / child_node.visit_count)
     # P0 maximizes, P1 minimizes.
-    result = exploit + (explore if parent_node.state.actor() == 0 else -1*explore)   # why are we keeping exploit unbiased?
+    result = exploit + (explore if parent_node.state.actor() == 0 else -1*explore)
 
   return result
 

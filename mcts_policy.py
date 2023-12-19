@@ -1,20 +1,17 @@
 from policy import RummyPolicy
 from agent_utility import find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets
-from mcts import mcts_draw_policy
+from base_mcts import base_mcts_policy
 from rummy_game import GameState
 from deck import Deck
 import copy
 import random
 
-class MCTSPolicy(RummyPolicy):
+class BaseMCTSPolicy(RummyPolicy):
   def __init__(self, time, game):
     self.time = time
     self.game = game
 
-  def draw(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, meld_turn_count, melds):
-    """Use MCTS to choose between drawing from discard pile and stock pile"""
-    # this is for playout only.
-    # simulate a bad player that DOESN'T TRACK CARDS. NOTE: potentially improvement: a belief table that does
+  def generate_unseen_card_distribution(self, hand, discard_pile_top_card, num_cards_in_hands, num_cards_stock_pile, melds):
     hand_info = copy.copy(hand)  # shallow copy of obj ref
     meld_info = [card for meld_set in melds for card in meld_set[0]]
     existing_cards = hand_info + meld_info + [discard_pile_top_card]  # don't overlap
@@ -47,13 +44,20 @@ class MCTSPolicy(RummyPolicy):
     assumed_discard_cards.append(discard_pile_top_card)
     # print(len(assumed_discard_cards))
     # print("discard " + str(assumed_discard_cards))
+    return reconstructed_stock, assumed_discard_cards
+
+  def draw(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, meld_turn_count, melds):
+    """Use MCTS to choose between drawing from discard pile and stock pile"""
+    # this is for playout only.
+    # simulate a bad player that DOESN'T TRACK CARDS. NOTE: potentially improvement: a belief table that does
+    reconstructed_stock, assumed_discard_cards = self.generate_unseen_card_distribution(hand, discard_pile_top_card, num_cards_in_hands, num_cards_stock_pile, melds) 
 
     root_state = GameState(self.game, hand, reconstructed_stock, assumed_discard_cards, num_turnover, meld_turn_count[player_index], melds, self.discard, 0)
-    mcts = mcts_draw_policy(self.time)  # a callable function
+    mcts = base_mcts_policy(self.time)  # a callable function
     choice = mcts(root_state)
     return choice
 
-  def discard(self, hand, player_index, scores, num_cards_in_hands, card_drawn_from_discard_pile, meld_turn_count, melds):
+  def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, card_drawn_from_discard_pile, meld_turn_count, melds):
     # Use the heuristical discard; TODO: update later.
     """Randomly meld (if possible) and discard card"""
     all_poss_melds = find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds)
@@ -61,3 +65,12 @@ class MCTSPolicy(RummyPolicy):
     meld_choice = available
     discard_choice = [] if not remaining else [random.choice(remaining)]
     return discard_choice, meld_choice
+  
+
+class AdvanceMCTSPolicy(BaseMCTSPolicy):
+
+  # Carry out MCTS on discard too
+  def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, card_drawn_from_discard_pile, meld_turn_count, melds):
+    reconstructed_stock, assumed_discard_cards = self.generate_unseen_card_distribution(hand, discard_pile_top_card, num_cards_in_hands, num_cards_stock_pile, melds) 
+
+    pass

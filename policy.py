@@ -33,7 +33,7 @@ class RummyPolicy(ABC):
     pass
 
   @abstractmethod
-  def discard(self, hand, player_index, scores, num_cards_in_hands, card_drawn_from_discard_pile, meld_turn_count, melds):
+  def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, card_drawn_from_discard_pile, meld_turn_count, melds):
     '''
       The meld and discard policy for rummy.
       Input:
@@ -41,6 +41,7 @@ class RummyPolicy(ABC):
         player_index: int - the player index to access the stat of the player in a multi-player list.
         scores: List[int] - the game scores of all existing players in the game.
         num_cards_in_hands: List[int] - the number of cards in the hand of each player, indexed by player_index
+        discard_pile_top_card: Card - topmost visible card of the discard pile
         card_drawn_from_discard_pile: None or Card - the same Card grabbed from the top of the discard pile in same turn's draw, else None.
                                                      Enforces the rule that the player can't discard this card in the same turn.
         meld_turn_count: List[int] - numbers of turns where melding is used for all existing player in the game.

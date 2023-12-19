@@ -1,7 +1,7 @@
 import argparse
 from rummy import Game as RummyGame
 from my_policy import RandomPolicy, HeuristicPolicy
-from mcts_policy import MCTSPolicy
+from mcts_policy import BaseMCTSPolicy
 import sys
 
 class SimulationError(Exception):
@@ -13,7 +13,7 @@ def init_agent(type, time, game):
   elif type == 1:
     return HeuristicPolicy()
   elif type == 2:
-    return MCTSPolicy(time, game)
+    return BaseMCTSPolicy(time, game)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description="Test agents for Rummy")

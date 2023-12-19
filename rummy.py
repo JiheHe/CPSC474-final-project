@@ -116,6 +116,7 @@ class Game:
                                             p,  # p is "your player index"
                                             scores[:],  # all players' scores
                                             [len(hand) for hand in hands], # number of cards in the hand of all players
+                                            None if not discard else discard[-1],  # top visible card of the discard pile
                                             card_drawn_from_discard_pile,  # if applicable. Can't discard the same card drawn from discard pile in this turn.
                                             meld_turn_count,  # number of turns where melding is used for each player
                                             melds)  # all melds on the table)
