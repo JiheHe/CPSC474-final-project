@@ -94,7 +94,16 @@ class State(State):
         consecutive.append(hand1_c.pop(i))  # i+3
         if i < len(hand) and consecutive[0].same_rank(hand[i]):  # 4 of a kind
           consecutive.append(hand1_c.pop(i))  # i+4
-        hand1_toak.append(consecutive)  # track that
+        # Now we generate all combinations
+        if len(consecutive) == 3:
+          hand1_toak.append((consecutive, copy.copy(hand1_c)))  # 3 choose 3 is 1. 1 set of option. 
+        else:  # == 4
+          c = consecutive
+          hand1_toak.append(([c[0], c[1], c[2]], copy.copy(hand1_c) + c[3]))  # 4 choose 3 is 4.
+          hand1_toak.append(([c[1], c[2], c[3]], copy.copy(hand1_c) + c[0]))
+          hand1_toak.append(([c[0], c[1], c[3]], copy.copy(hand1_c) + c[2]))
+          hand1_toak.append(([c[0], c[2], c[3]], copy.copy(hand1_c) + c[1]))
+          hand1_toak.append((c, copy.copy(hand1_c)))  # or 4 at once.
       else:
         i += 1
     
@@ -118,7 +127,10 @@ class State(State):
           consecutive.append(suit.pop(i))
           while i < len(hand) and suit[i].rank() - consecutive[-1].rank() == 1:  # k straight
             consecutive.append(suit.pop(i))
-          hand2_sss.append(consecutive)
+          # Now we generate all combinations
+          for seq_len in range(3, len(consecutive)):
+            for j in range(len(consecutive) - seq_len + 1):
+              # hand2_sss.append(, copy.copy(hand2_c)))
         else:
           i += 1
     hand2_c = shcd[0] + shcd[1] + shcd[2] + shcd[3]  # stitch together the rest.
