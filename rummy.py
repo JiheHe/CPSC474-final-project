@@ -123,7 +123,7 @@ class Game:
           raise Exception(f"Invalid new meld {matched_set}, too few cards.")
         matched_set.sort()  # ascending order.
         n_of_a_kind = all(matched_set[0].same_rank(card) for card in matched_set)
-        same_suit_seq = all( (matched_set[i+1] - matched_set[i] == 1 and matched_set[i+1].same_suit(matched_set[i])) for i in range(len(matched_set))-1)
+        same_suit_seq = all( (matched_set[i+1].rank() - matched_set[i].rank() == 1 and matched_set[i+1].same_suit(matched_set[i])) for i in range(len(matched_set))-1)
         if not n_of_a_kind and not same_suit_seq:
           raise Exception(f"Invalid new meld {matched_set}, need to be n_of_a_kind or same_suit_sequence.")  # match set is sorted now.
         # Put the new meld on the table
@@ -148,11 +148,11 @@ class Game:
           if len(matched_set) == 0:
             raise Exception(f"Cannot use an empty set of cards for melding.")
           matched_set.sort()  # ascending order.   # Also remember meld_matched_set is sorted when placed onto the table.
-          if meld_matched_set[0] - matched_set[-1] == 1 and meld_matched_set[0].same_suit(matched_set[-1]):  # append to meld_set front
+          if meld_matched_set[0].rank() - matched_set[-1].rank() == 1 and meld_matched_set[0].same_suit(matched_set[-1]):  # append to meld_set front
             # Add into the meld
             hands[p] = self._remove_from_hand(hands[p], matched_set)  # remove from hand
             melds[decision][0] = matched_set + melds[decision][0]
-          elif matched_set[0] - meld_matched_set[-1] == 1 and meld_matched_set[-1].same_suit(matched_set[0]):  # append to meld_set end
+          elif matched_set[0].rank() - meld_matched_set[-1].rank() == 1 and meld_matched_set[-1].same_suit(matched_set[0]):  # append to meld_set end
             # Add into the meld
             hands[p] = self._remove_from_hand(hands[p], matched_set)  # remove from hand
             melds[decision][0] = melds[decision][0] + matched_set

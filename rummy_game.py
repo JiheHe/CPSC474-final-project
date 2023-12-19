@@ -2,6 +2,7 @@
 
 from rummy import Game as Rummy
 from game import State
+import copy
 
 
 class State(State):
@@ -76,14 +77,40 @@ class State(State):
     Output:
       List[List[Tuple(List[Card], String)]] - a list of lists such that each list is a set of melding options we can do given our
                                                   current hand, cleared of overlaps. Each meld is a list of cards and a string type.
-    '''
-    hand.sort()  # if hand is not already sorted, ranked based on rank only
-    i = 0
-    new_three_of_a_kind = []
-    while i <= len(hand)-3:
-      new_three_of_a_kind
-      if hand[i].same_rank(hand[i+1]) and hand[i+1].same_rank(hand[i+2]):
+    '''  
+    hand.sort()  # sort hand if not already sorted.
+    # NOTE: a shallow copy where each entry is the same reference to the same card, but different lists
+    hand1_c = copy.copy(hand)  # three of a kind leftovers
+    hand2_c = copy.copy(hand)  # same_suit_seq leftovers
 
+    # split hand into hand1_toak and hand1_c
+    i = 0
+    hand1_toak = []
+    while i <= len(hand1_c)-3:
+      consecutive = []
+      if hand1_c[i].same_rank(hand1_c[i+1]) and hand1_c[i+1].same_rank(hand1_c[i+2]):  # 3 of a kind
+        consecutive.append(hand1_c.pop(i))  # i+1
+        consecutive.append(hand1_c.pop(i))  # i+2
+        consecutive.append(hand1_c.pop(i))  # i+3
+        if i < len(hand) and consecutive[0].same_rank(hand[i]):  # 4 of a kind
+          consecutive.append(hand1_c.pop(i))  # i+4
+        hand1_toak.append(consecutive)  # track that
+      else:
+        i += 1
+    
+    # split hand into hand2_sss and hand2_c
+    shcd = [[] for i in range(4)]  # order: s, h, d, c; partition by same suit first
+    while i == 0:
+      card = hand2_c.pop(i)
+      if card.suit('S'): shcd[0].append(card) 
+      elif card.suit('H'): shcd[1].append(card)
+      elif card.suit('C'): shcd[2].append(card)
+      elif card.suit('D'): shcd[3].append(card)
+    for suit in shcd:
+      i = 0
+      while i <= len(suit)-3:
+        consecutive = []
+        if hand1_c[i].same_rank(hand1_c[i+1]) and hand1_c[i+1].same_rank(hand1_c[i+2]):  # 3 straight
 
 
 
