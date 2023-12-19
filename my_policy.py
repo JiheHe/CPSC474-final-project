@@ -8,7 +8,7 @@ class RandomPolicy(RummyPolicy):
         """Randomly chooses between drawing from discard pile and stock pile"""
         return random.choice(["discard", "stock"]) 
 
-    def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, card_drawn_from_discard_pile, meld_turn_count, melds):
+    def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, card_drawn_from_discard_pile, meld_turn_count, melds):
         """Randomly meld (if possible) and discard card"""
         all_poss_melds = find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds)
         available, remaining = random.choice(all_poss_melds)
@@ -31,7 +31,7 @@ class HeuristicPolicy(RummyPolicy):
         """Heuristically chooses between drawing from discard pile and stock pile"""
         return random.choice(["discard", "stock"]) 
 
-    def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, card_drawn_from_discard_pile, meld_turn_count, melds):
+    def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, card_drawn_from_discard_pile, meld_turn_count, melds):
         """Heuristically melds (if possible) and discards card"""
         all_poss_melds = find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds)
         available, remaining = random.choice(all_poss_melds)

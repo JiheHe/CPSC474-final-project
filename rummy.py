@@ -67,7 +67,7 @@ class Game:
     return [card for card in counts.keys() if counts[card] == 1]  # the remaining cards in hand.  # new list is less efficient than .remove since by reference.
 
   # NOTE: Finest Granularity, move of one player
-  def player_move(self, p, policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds, MCTS_policies=False):
+  def player_move(self, p, policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds, MCTS_draw_policy=False, MCTS_discard_policy=False, half_start=False):
     '''Executes one turn of the given player
       All inputs needing to be updated are passed by reference (mutable objects)
       Returns True if game ended on this turn, None otherwise
@@ -82,7 +82,7 @@ class Game:
 
     # Draw
     # Draw Policy either returns "stock" for drawing the top card from stock or "discard" for taking the top card from discard pile.
-    if MCTS_policies:
+    if MCTS_draw_policy:
       draw_policy = policies[p][0]
     else:
       draw_policy = policies[p].draw(hands[p],  # your hand
@@ -95,32 +95,37 @@ class Game:
                               meld_turn_count,  # number of turns where melding is used for each player
                               melds)  # all melds on the table
     card_drawn_from_discard_pile = None
-    if draw_policy == "stock":  # draw the top card from stock pile
-      if stock.size() == 0:  # stock pile is empty
-        stock._cards = list(reversed(discard))  # turn over the discard pile and use it as the new stock pile
-        discard.clear()  # discard pile is gone now. But no worry! This player will have to discard anyway.
-        num_turnover[0] += 1  # record this turnover
-      hands[p] += stock.deal(1)  # draw 1 card from the top
-    elif draw_policy == "discard":  # take the top card from discard pile
-      top_card = discard.pop()
-      hands[p].append(top_card)
-      card_drawn_from_discard_pile = top_card
-    else:
-      raise Exception(f"Invalid Draw Policy Response: {draw_policy}. Must be 'stock' or 'discard.'")
+    if not half_start:
+      if draw_policy == "stock":  # draw the top card from stock pile
+        if stock.size() == 0:  # stock pile is empty
+          stock._cards = list(reversed(discard))  # turn over the discard pile and use it as the new stock pile
+          discard.clear()  # discard pile is gone now. But no worry! This player will have to discard anyway.
+          num_turnover[0] += 1  # record this turnover
+        hands[p] += stock.deal(1)  # draw 1 card from the top
+      elif draw_policy == "discard":  # take the top card from discard pile
+        top_card = discard.pop()
+        hands[p].append(top_card)
+        card_drawn_from_discard_pile = top_card
+      else:
+        raise Exception(f"Invalid Draw Policy Response: {draw_policy}. Must be 'stock' or 'discard.'")
     
     # print("player " + str(p) + ", after drawing hand is " + str(hands[p]))
 
     # Discard & Optional (can also win here)
     # Discard Policy returns a [Card] to discard and [([Cards],decision)([Cards],decision)...] to meld away. Can be empty lists!
-    discard_policy, meld_policy = policies[p].discard(hands[p],  # your hand, NOT deepcopied atm cuz by reference.
-                                            p,  # p is "your player index"
-                                            scores[:],  # all players' scores
-                                            [len(hand) for hand in hands], # number of cards in the hand of all players
-                                            None if not discard else discard[-1],  # top visible card of the discard pile
-                                            stock.size(),  # num cards left of the stock pile
-                                            card_drawn_from_discard_pile,  # if applicable. Can't discard the same card drawn from discard pile in this turn.
-                                            meld_turn_count,  # number of turns where melding is used for each player
-                                            melds)  # all melds on the table)
+    if MCTS_discard_policy:
+      discard_policy, meld_policy = policies[p][0]
+    else:
+      discard_policy, meld_policy = policies[p].discard(hands[p],  # your hand, NOT deepcopied atm cuz by reference.
+                                              p,  # p is "your player index"
+                                              scores[:],  # all players' scores
+                                              [len(hand) for hand in hands], # number of cards in the hand of all players
+                                              None if not discard else discard[-1],  # top visible card of the discard pile
+                                              stock.size(),  # num cards left of the stock pile
+                                              num_turnover[0],  # the current number of turnovers so far
+                                              card_drawn_from_discard_pile,  # if applicable. Can't discard the same card drawn from discard pile in this turn.
+                                              meld_turn_count,  # number of turns where melding is used for each player
+                                              melds)  # all melds on the table)
     
     # print("player " + str(p) + ", discard policy is " + str(discard_policy))
     # print("player " + str(p) + ", meld policy is " + str(meld_policy))
