@@ -11,6 +11,25 @@ def find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(self, hand, melds):
                                                 current hand, cleared of overlaps. Each meld is a list of cards and a string type.
                                                 # NOTE: enforced by "must always meld all you can" rule.
   '''
+  hand.sort()  # sort hand if not already sorted.
+  # NOTE: a shallow copy where each entry is the same reference to the same card, but different lists
+  hand1_c = copy.copy(hand)  # three of a kind leftovers
+  hand2_c = copy.copy(hand)  # same_suit_seq leftovers
+
+  # split hand into hand1_toak and hand1_c
+  i = 0
+  hand1_toak = []
+  while i <= len(hand1_c)-3:
+    consecutive = []
+    if hand1_c[i].same_rank(hand1_c[i+1]) and hand1_c[i+1].same_rank(hand1_c[i+2]):  # 3 of a kind
+      consecutive.append(hand1_c.pop(i))  # i+1
+      consecutive.append(hand1_c.pop(i))  # i+2
+      consecutive.append(hand1_c.pop(i))  # i+3
+      if i < len(hand) and consecutive[0].same_rank(hand[i]):  # 4 of a kind
+        consecutive.append(hand1_c.pop(i))  # i+4
+      hand1_toak.append(consecutive)
+    else:
+      i += 1
   pass  
 
 '''
@@ -21,6 +40,15 @@ def find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(self, hand, melds):
   So now the function can generate less choices; but still chocies in what you are melding.
   Note: this isn't enforced in the rummy.py game implementation. It's just an agent thing. We choose it this way 
   so the game code is original and can be used to its full potential in the future.
+  Second note: going to prefer NEW_MELDS over EXISTING_MELDS when ENFORCING EVERYTHING MELDABLE. This means, if a card can
+  be used for both.... WAIT
+  NOTE: since we are receiving one card at a time, say every NEW_MELDS break into two sets that could overlap: a NEW_MELDS,
+  and an EXISTING_MELDS. But these two sets DON'T have overlapping cards since we are gaining at most 1 new card at a time,
+  a previous melds would've been played previously already. Ex. 123345 is not possible under the MELD_EVERYTHING_IF_POSSIBLE
+  policy. So we just need to pick one set of NEW_MELD to do from either the 3 of a kind set, or same suit seq set. However,
+  note this is possible at the very first turn of the first player since the player gets 10 cards at once. For the simplicity
+  of the game, we'll still stick with our assumption since it's a more suboptimal heuristic but doesn't break the game. It could
+  be treated as a rule so to speak. This is provable via induction. 
 '''
 
 # def find_all_meldable_sets(self, hand, melds):
