@@ -57,7 +57,7 @@ class BaseMCTSPolicy(RummyPolicy):
     choice = mcts(root_state)
     return choice
 
-  def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, card_drawn_from_discard_pile, meld_turn_count, melds):
+  def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, card_drawn_from_discard_pile, meld_turn_count, melds):
     # Use the heuristical discard; TODO: update later.
     """Randomly meld (if possible) and discard card"""
     all_poss_melds = find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds)
@@ -70,7 +70,7 @@ class BaseMCTSPolicy(RummyPolicy):
 class AdvanceMCTSPolicy(BaseMCTSPolicy):
 
   # Carry out MCTS on discard too
-  def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, card_drawn_from_discard_pile, meld_turn_count, melds):
+  def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, card_drawn_from_discard_pile, meld_turn_count, melds):
     reconstructed_stock, assumed_discard_cards = self.generate_unseen_card_distribution(hand, discard_pile_top_card, num_cards_in_hands, num_cards_stock_pile, melds) 
 
     pass
