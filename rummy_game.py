@@ -100,19 +100,26 @@ class State(State):
     
     # split hand into hand2_sss and hand2_c
     shcd = [[] for i in range(4)]  # order: s, h, d, c; partition by same suit first
-    while i == 0:
+    i = 0
+    while i < len(hand2_c):
       card = hand2_c.pop(i)
       if card.suit('S'): shcd[0].append(card) 
       elif card.suit('H'): shcd[1].append(card)
       elif card.suit('C'): shcd[2].append(card)
       elif card.suit('D'): shcd[3].append(card)
+    hand2_sss = []  # then do the splitting
     for suit in shcd:
       i = 0
       while i <= len(suit)-3:
         consecutive = []
-        if hand1_c[i].same_rank(hand1_c[i+1]) and hand1_c[i+1].same_rank(hand1_c[i+2]):  # 3 straight
-
-
-
-    pass
-
+        if suit[i+1].rank() - suit[i].rank() == 1 and suit[i+2].rank() - suit[i+1].rank() == 1:  # 3 straight
+          consecutive.append(suit.pop(i))
+          consecutive.append(suit.pop(i))
+          consecutive.append(suit.pop(i))
+          while i < len(hand) and suit[i].rank() - consecutive[-1].rank() == 1:  # k straight
+            consecutive.append(suit.pop(i))
+          hand2_sss.append(consecutive)
+        else:
+          i += 1
+    hand2_c = shcd[0] + shcd[1] + shcd[2] + shcd[3]  # stitch together the rest.
+    
