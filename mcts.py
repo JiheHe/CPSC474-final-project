@@ -1,4 +1,4 @@
-# To be edited later
+# NOTE: this setup is capable of dealing with single-player, since we all have to do is make the state-actor == 0 always.
 import time
 import math
 import random

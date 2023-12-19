@@ -1,10 +1,7 @@
 '''Discretizes the rummy game into MCTS-processible parts. Note Rummy is NOT a perfect information game.'''
 
-from rummy import Game as Rummy
 from game import State
-from deck import Deck
 import copy
-import random
 
 class GameState(State):
   '''A state in the Rummy Game, granularity to be defined-
@@ -17,67 +14,55 @@ class GameState(State):
     We know opponent's strategy.
     [assuming optimal you and player?]
     [optimal you only, feeding in player stratgy?]
-    TODO: make a decision, and implement this.
+    ...etc
+
+    FINAL DECISION:
+    For MCTS, simulate a one-player playout i.e. yourself using the observable knowledge from the current state
+    of the game.
+    The playout lasts till the end of a ROUND only.
+    This is for drawing policy only at the moment.
   '''
 
-  def __init__(self, game, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, meld_turn_count, melds):
+  def __init__(self, game, hand, stock_cards, discard_cards, num_turnover, meld_turn_count, melds, discard_policy, num_turn_so_far):
     # These information are related to the current turn of the player, inherited from Policy
-    self.game = game  # perfection information instance currently, not fair; need some masking to simulate the unknowing state.
-
-    # this is for playout only.
-    # simulate a bad player that DOESN'T TRACK CARDS. NOTE: potentially improvement: a belief table that does
-    hand_info = copy.copy(hand)  # shallow copy of obj ref
-    meld_info = [card for meld_set in melds for card in meld_set[0]]
-    existing_cards = hand_info + meld_info  # don't overlap
-    self.reconstructed_stock = Deck(self.game.ALL_RANKS, self.game.ALL_SUITS, 1)
-    i = 0
-    while i < len(self.reconstructed_stock._cards):  # remove the viewable, existing possibilities from the deck
-      existed = False
-      for j in range(len(existing_cards)):
-        if self.reconstructed_stock._cards[i].same_suit(existing_cards[j]) and self.reconstructed_stock._cards[i].same_rank(existing_cards[j]):
-          existing_cards.pop(j)
-          existed = True
-          break
-      if existed:
-        self.reconstructed_stock._cards.pop(i)
-      else:
-        i += 1
-      if len(existing_cards) == 0:
-        break
-    self.reconstructed_stock._cards = random.choices(self.reconstructed_stock._cards, k=num_cards_stock_pile) # select
-
-
-
-    self.hand = hand
-    self.player_index = player_index
-    self.scores = scores
-    self.num_cards_in_hands = num_cards_in_hands
-    self.discard_pile_top_card = discard_pile_top_card
-    self.num_cards_stock_pile = num_cards_stock_pile
+    self.game = game  # perfection information instance currently, not fair; need some masking to simulate the unknowing state. Otherwise just a function caller.
+    # Other state properties
+    self.reconstructed_stock = stock_cards
+    self.reconstructed_discard = discard_cards
+    self.hand = hand  # DEEPCOPY later at playout; don't want to disturb the original references
     self.num_turnover = num_turnover
-    self.meld_turn_count = meld_turn_count
-    self.melds = melds
+    self.meld_turn_count_self = meld_turn_count # not possible given current melding constraints for simplification...
+    self.melds = melds  # DEEPCOPY later at playout; don't want to disturb the original references
+    self.discard_policy = discard_policy  # first order function.
+    self.num_turn_so_far = num_turn_so_far
 
-  def is_terminal(self, hands, num_turnover, stock):
+  def is_terminal(self):
     """ Determines if this state is terminal.  Return value is true is so and false otherwise.
 
         self -- a state depending on externel information
     """
-    return self.game.round_ends(hands) or self.game.tie(num_turnover[0], stock.size())
+    return self.game.round_ends([self.hand]) or self.game.tie(self.num_turnover, self.reconstructed_stock.size())
 
   def payoff(self):
     """ Returns the payoff for player 0 at this terminal state.
 
         self -- a terminal state
     """
-    pass
-
+    # NOTE: design a payoff. Since it's a single player
+    # Shorter the turns the better (if you win)
+    # If tie, then bad reward.
+    if self.game.tie(self.num_turnover, self.reconstructed_stock.size()):
+      return -1
+    else:
+      # print(self.num_turn_so_far)  # Based on statistics, ranges from 10 to 150 turn. 
+      return (1 - self.num_turn_so_far / 150)  # normalize; inverse reward, less the better.
+    
   def actor(self):
     """ Determines which player is the actor in this nonterminal state.
 
         self -- a nonterminal state
     """
-    pass
+    return 0  # you are always the actor; 1 player playout.
 
   def get_actions(self):
     """ Returns a list of possible actions in this nonterminal state.
@@ -85,7 +70,7 @@ class GameState(State):
 
         self -- a nonterminal state
     """
-    pass
+    return ["stock", "discard"]  # MCTS for drawing for now.
 
   def is_legal(self, action):
     """ Determines if the given action is legal in this state.
@@ -93,7 +78,7 @@ class GameState(State):
         self -- a state
         action -- an action
     """
-    return False
+    pass   # never used; useless.
   
   def successor(self, action):
     """ Returns the state that results from the given action in this nonterminal state.
@@ -101,5 +86,37 @@ class GameState(State):
         self -- a nonterminal state
         action -- one of the actions in the list returned by get_actions for this state
     """
-    pass
+    temp_policy = Monkey(self.discard_policy, [action])  # monkey patching...
+    # They differ by state
+    succ_stock = copy.deepcopy(self.reconstructed_stock)  # obj by ref, no need to wrap; has a reassignment at card flip
+    succ_discard = copy.deepcopy(self.reconstructed_discard)  # clear is used instead.
+    succ_hand = [copy.deepcopy(self.hand)]  # need to wrap here, since there's a replacement going on in the game code.
+    succ_num_turnover = [self.num_turnover]
+    succ_meld_turn_count_self = [self.meld_turn_count_self]
+    succ_melds = copy.deepcopy(self.melds)
+    # print("before DPMOVE: " + str(succ_hand))
+    # Reminder: this function is reference-modifying.
+    self.game.player_move(p=0, 
+                          policies=[temp_policy], 
+                          stock=succ_stock, 
+                          discard=succ_discard, 
+                          num_turnover=succ_num_turnover, 
+                          hands=succ_hand, 
+                          scores=[], 
+                          meld_turn_count=succ_meld_turn_count_self, 
+                          melds=succ_melds,
+                          MCTS_policies=True
+                          )
+    # print("after DPMOVE: " + str(succ_hand))
+    # Set up the return state (new copy pretty much)
+    succ = GameState(self.game, succ_hand[0], succ_stock, succ_discard, succ_num_turnover[0], succ_meld_turn_count_self[0], 
+                     succ_melds, self.discard_policy, self.num_turn_so_far + 1)
+    return succ
 
+class Monkey(list):
+  def __init__(self, discard_policy, *args, **kwargs):
+    super(Monkey, self).__init__(*args, **kwargs)
+    self.discard = discard_policy  # first order function
+
+  def discard(self):
+    pass

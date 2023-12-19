@@ -54,6 +54,7 @@ class Game:
             counts[card] = 0
         counts[card] += 1
         if counts[card] > 1:
+          # print("Hand before error is: " + str(hand))
           raise Exception(f"Something went wrong. Card {card} appeared more than once in hand!")
 
     for card in cards_to_remove:
@@ -66,7 +67,7 @@ class Game:
     return [card for card in counts.keys() if counts[card] == 1]  # the remaining cards in hand.  # new list is less efficient than .remove since by reference.
 
   # NOTE: Finest Granularity, move of one player
-  def player_move(self, p, policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds):
+  def player_move(self, p, policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds, MCTS_policies=False):
     '''Executes one turn of the given player
       All inputs needing to be updated are passed by reference (mutable objects)
       Returns True if game ended on this turn, None otherwise
@@ -81,15 +82,18 @@ class Game:
 
     # Draw
     # Draw Policy either returns "stock" for drawing the top card from stock or "discard" for taking the top card from discard pile.
-    draw_policy = policies[p].draw(hands[p],  # your hand
-                            p,  # p is "your player index"
-                            scores[:],  # all players' scores
-                            [len(hand) for hand in hands], # number of cards in the hand of all players
-                            discard[-1],  # top visible card of the discard pile
-                            stock.size(),  # num cards left of the stock pile
-                            num_turnover[0],  # the current number of turnovers so far
-                            meld_turn_count,  # number of turns where melding is used for each player
-                            melds)  # all melds on the table
+    if MCTS_policies:
+      draw_policy = policies[p][0]
+    else:
+      draw_policy = policies[p].draw(hands[p],  # your hand
+                              p,  # p is "your player index"
+                              scores[:],  # all players' scores
+                              [len(hand) for hand in hands], # number of cards in the hand of all players
+                              discard[-1],  # top visible card of the discard pile
+                              stock.size(),  # num cards left of the stock pile
+                              num_turnover[0],  # the current number of turnovers so far
+                              meld_turn_count,  # number of turns where melding is used for each player
+                              melds)  # all melds on the table
     card_drawn_from_discard_pile = None
     if draw_policy == "stock":  # draw the top card from stock pile
       if stock.size() == 0:  # stock pile is empty
@@ -297,4 +301,5 @@ class Game:
       game_winners, max_score = self.play(policies, lambda mess: None)  # no log function for now.
       for winner in game_winners:  # update for all winners.
         wins[winner] += 1 / len(game_winners)  # this ensures the final total adds to 100%
+      print(f"Iteration {g+1} finished.")
     return [win / count for win in wins]

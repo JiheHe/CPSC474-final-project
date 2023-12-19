@@ -1,10 +1,19 @@
 import argparse
 from rummy import Game as RummyGame
 from my_policy import RandomPolicy
+from mcts_policy import MCTSPolicy
 import sys
 
 class SimulationError(Exception):
   pass
+
+def init_agent(type, time, game):
+  if type == 0:
+    return RandomPolicy()
+  elif type == 1:
+    pass
+  elif type == 2:
+    return MCTSPolicy(time, game)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description="Test agents for Rummy")
@@ -24,10 +33,9 @@ if __name__ == '__main__':
     raise SimulationError("agent2 must be 0, 1, or 2")
 
   game = RummyGame()
-  policies = [RandomPolicy]  # TODO: expand with more options later
 
-  agent1 = policies[args.agent1]()
-  agent2 = policies[args.agent2]()
+  agent1 = init_agent(args.agent1, args.time, game)
+  agent2 = init_agent(args.agent2, args.time, game)
   
   result = game.evaluate_policies([agent1, agent2], args.count)
   print(result)
