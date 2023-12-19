@@ -8,6 +8,10 @@ class RummyPolicy(ABC):
   # instaed of potentially passing back new cards. The game logic requires by-reference logic to work.
   # Takes some effort to transform to suit/rank comparison instead of reference comparison at the moment.
 
+  def clear_cache(self):
+    '''Clears the cache in-between rounds, like state-dictionaries, etc.'''
+    pass  # default is to do nothing. Can optionally overwrite.
+
   @abstractmethod
   def draw(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, meld_turn_count, melds):
     '''

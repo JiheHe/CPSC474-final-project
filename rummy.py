@@ -263,6 +263,10 @@ class Game:
       # Note: here, "top of the pile" refers to "end of the list"
       num_turnover = [0]  # the number of discard -> new stock "turnover" in the round so far.
 
+      # Clear all caches, if any
+      for policy in policies:
+        policy.clear_cache()
+
       # Play
       self.play_one_round(policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds)
 
