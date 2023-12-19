@@ -1,6 +1,6 @@
 import argparse
 from rummy import Game as RummyGame
-from my_policy import RandomPolicy
+from my_policy import RandomPolicy, HeuristicPolicy
 from mcts_policy import MCTSPolicy
 import sys
 
@@ -11,7 +11,7 @@ def init_agent(type, time, game):
   if type == 0:
     return RandomPolicy()
   elif type == 1:
-    pass
+    return HeuristicPolicy()
   elif type == 2:
     return MCTSPolicy(time, game)
 
