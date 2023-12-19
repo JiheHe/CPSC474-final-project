@@ -67,7 +67,25 @@ class State(State):
     pass
 
 
-  def find_all_meldable_sets():
-    '''Overlaps?'''
+  def find_all_meldable_sets(self, hand, melds):
+    '''
+    Input:
+      hand: List[Card] - the current hand of this player; note these Cards are by reference.
+      melds: List[Tuple(List[Card], String)] - all melds on the table, each in the manner of (all cards in the meld, meld's type).
+                                                  meld's type is either "n_of_a_kind" or "same_suit_seq"
+    Output:
+      List[List[Tuple(List[Card], String)]] - a list of lists such that each list is a set of melding options we can do given our
+                                                  current hand, cleared of overlaps. Each meld is a list of cards and a string type.
+    '''
+    hand.sort()  # if hand is not already sorted, ranked based on rank only
+    i = 0
+    new_three_of_a_kind = []
+    while i <= len(hand)-3:
+      new_three_of_a_kind
+      if hand[i].same_rank(hand[i+1]) and hand[i+1].same_rank(hand[i+2]):
+
+
+
+
     pass
 
