@@ -71,7 +71,10 @@ class Game:
       All inputs needing to be updated are passed by reference (mutable objects)
       Returns True if game ended on this turn, None otherwise
     '''
-    
+    # print("player " + str(p) + ", at start hand is " + str(hands[p]))
+    # print("melds are " + str(melds))
+    # print("current state: stock-" + str(stock.size()) + ", discard- " + str(discard[-1]) + " " + str(len(discard)))
+
     # Check if the game is tie now.
     if self.tie(num_turnover[0], stock.size()):  # stock has been burned through num_turnover amount of times. Tie.
       return True
@@ -91,7 +94,7 @@ class Game:
     if draw_policy == "stock":  # draw the top card from stock pile
       if stock.size() == 0:  # stock pile is empty
         stock._cards = list(reversed(discard))  # turn over the discard pile and use it as the new stock pile
-        discard = []  # discard pile is gone now. But no worry! This player will have to discard anyway.
+        discard.clear()  # discard pile is gone now. But no worry! This player will have to discard anyway.
         num_turnover[0] += 1  # record this turnover
       hands[p] += stock.deal(1)  # draw 1 card from the top
     elif draw_policy == "discard":  # take the top card from discard pile
@@ -100,6 +103,8 @@ class Game:
       card_drawn_from_discard_pile = top_card
     else:
       raise Exception(f"Invalid Draw Policy Response: {draw_policy}. Must be 'stock' or 'discard.'")
+    
+    # print("player " + str(p) + ", after drawing hand is " + str(hands[p]))
 
     # Discard & Optional (can also win here)
     # Discard Policy returns a [Card] to discard and [([Cards],decision)([Cards],decision)...] to meld away. Can be empty lists!
@@ -110,6 +115,9 @@ class Game:
                                             card_drawn_from_discard_pile,  # if applicable. Can't discard the same card drawn from discard pile in this turn.
                                             meld_turn_count,  # number of turns where melding is used for each player
                                             melds)  # all melds on the table)
+    
+    # print("player " + str(p) + ", discard policy is " + str(discard_policy))
+    # print("player " + str(p) + ", meld policy is " + str(meld_policy))
 
     # Track for rummy_factor.        
     if len(meld_policy) > 0:
@@ -123,7 +131,7 @@ class Game:
           raise Exception(f"Invalid new meld {matched_set}, too few cards.")
         matched_set.sort()  # ascending order.
         n_of_a_kind = all(matched_set[0].same_rank(card) for card in matched_set)
-        same_suit_seq = all( (matched_set[i+1].rank() - matched_set[i].rank() == 1 and matched_set[i+1].same_suit(matched_set[i])) for i in range(len(matched_set))-1)
+        same_suit_seq = all( (matched_set[i+1].rank() - matched_set[i].rank() == 1 and matched_set[i+1].same_suit(matched_set[i])) for i in range(len(matched_set)-1) )
         if not n_of_a_kind and not same_suit_seq:
           raise Exception(f"Invalid new meld {matched_set}, need to be n_of_a_kind or same_suit_sequence.")  # match set is sorted now.
         # Put the new meld on the table
@@ -142,7 +150,9 @@ class Game:
             raise Exception(f"Cannot add to three of a kind {meld_matched_set} with {matched_set}, invalid add.")
           # Add into the meld
           hands[p] = self._remove_from_hand(hands[p], matched_set)  # remove from hand
+          melds[decision] = list(melds[decision])
           melds[decision][0] += matched_set
+          melds[decision] = tuple(melds[decision])
         elif set_type == "same_suit_seq":  # trying to append a sequence
           # Check add meld validity
           if len(matched_set) == 0:
@@ -151,11 +161,15 @@ class Game:
           if meld_matched_set[0].rank() - matched_set[-1].rank() == 1 and meld_matched_set[0].same_suit(matched_set[-1]):  # append to meld_set front
             # Add into the meld
             hands[p] = self._remove_from_hand(hands[p], matched_set)  # remove from hand
+            melds[decision] = list(melds[decision])
             melds[decision][0] = matched_set + melds[decision][0]
+            melds[decision] = tuple(melds[decision])
           elif matched_set[0].rank() - meld_matched_set[-1].rank() == 1 and meld_matched_set[-1].same_suit(matched_set[0]):  # append to meld_set end
             # Add into the meld
             hands[p] = self._remove_from_hand(hands[p], matched_set)  # remove from hand
-            melds[decision][0] = melds[decision][0] + matched_set
+            melds[decision] = list(melds[decision])
+            melds[decision][0] += matched_set
+            melds[decision] = tuple(melds[decision])
           else:
             raise Exception(f"Cannot add to same_suit_seq {meld_matched_set} with {matched_set}, invalid add")
 
@@ -169,10 +183,13 @@ class Game:
     # Execute Discard.
     if not len(discard_policy) == 1:
       raise Exception(f"Can only discard one card at a time, not {discard_policy}")
-    if card_drawn_from_discard_pile and discard_policy[0] == card_drawn_from_discard_pile:
-      raise Exception(f"Cannot discard the card {discard_policy[0]} drawn from the discard pile on the same turn.")
+    # Note: this is a deprecated rule. Doesn't make much sense.
+    # if card_drawn_from_discard_pile and discard_policy[0] == card_drawn_from_discard_pile:
+    #   raise Exception(f"Cannot discard the card {discard_policy[0]} drawn from the discard pile on the same turn.")
     hands[p] = self._remove_from_hand(hands[p], discard_policy)
     discard.append(discard_policy[0])  # put faceup onto the discard pile
+
+    # print("player " + str(p) + ", after move hand is " + str(hands[p]))
 
   # NOTE: Medium Granularity, moves of all players
   def players_move(self, *args):
@@ -191,7 +208,7 @@ class Game:
       All inputs needing to be updated are passed by reference (mutable objects)
       No return.
     '''
-    while not (self.round_ends(hands) or self.tie(num_turnover, stock.size())):
+    while not (self.round_ends(hands) or self.tie(num_turnover[0], stock.size())):
       self.players_move(policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds)
 
   def evaluate_round_result(self, hands, scores, meld_turn_count):
@@ -243,13 +260,13 @@ class Game:
       num_turnover = [0]  # the number of discard -> new stock "turnover" in the round so far.
 
       # Play
-      self.play_one_round(self, policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds)
+      self.play_one_round(policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds)
 
       # End Round Maths
-      self.evaluate_round_result(self, hands, scores, meld_turn_count)
+      self.evaluate_round_result(hands, scores, meld_turn_count)
 
       # Starting player alternates (or move to the next) next round
-      self.PLAYERS = self.PLAYERS[1:] + self.PLAYERS[:1]  # NOTE: hopefully doesn't lead to bugs.
+      self.PLAYERS = list(self.PLAYERS[1:]) + list(self.PLAYERS[:1])
 
     # Game ends, return the stats
     game_winners, max_score = self.evaluate_game_result(scores)
@@ -275,7 +292,7 @@ class Game:
       Output:
         [float] - a list of average winning ratio for each policy, based on the given index
     '''
-    wins = [0 for p in self.NUM_PLAYERS]
+    wins = [0 for p in range(self.NUM_PLAYERS)]
     for g in range(count):
       game_winners, max_score = self.play(policies, lambda mess: None)  # no log function for now.
       for winner in game_winners:  # update for all winners.

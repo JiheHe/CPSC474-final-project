@@ -7,8 +7,10 @@ def find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds):
     melds: List[Tuple(List[Card], String)] - all melds on the table, each in the manner of (all cards in the meld, meld's type).
                                                 meld's type is either "n_of_a_kind" or "same_suit_seq"
   Output:
-    List[List[Tuple(List[Card], String)]] - a list of lists such that each list is a set of melding options we can do given our
-                                                current hand, cleared of overlaps. Each meld is a list of cards and a string type.
+    List[Tuple(List[Tuple(List[Card], String or int)], List[Card])] - a list of tuples such that the first element list is a set of melding 
+                                                options we can do given our current hand, cleared of overlaps. Each meld is a list 
+                                                of cards and a string type. The second element is a list of remaining cards from the
+                                                first choice in the current hand.
                                                 # NOTE: enforced by " MELD_EVERYTHING_IN_HAND_MELDABLE
                                                                       PREFER_NEW_MELDS_OVER_EXISTING_MELDS
                                                                       LONGEST_LENGTH_NEW_MELD_PREFERRED
@@ -40,10 +42,10 @@ def find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds):
   i = 0
   while i < len(hand2_c):
     card = hand2_c.pop(i)
-    if card.suit('S'): shcd[0].append(card) 
-    elif card.suit('H'): shcd[1].append(card)
-    elif card.suit('C'): shcd[2].append(card)
-    elif card.suit('D'): shcd[3].append(card)
+    if card.suit() == 'S': shcd[0].append(card) 
+    elif card.suit() == 'H': shcd[1].append(card)
+    elif card.suit() == 'C': shcd[2].append(card)
+    elif card.suit() == 'D': shcd[3].append(card)
   hand2_sss = []  # then do the splitting
   for suit in shcd:
     i = 0
@@ -63,29 +65,38 @@ def find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds):
   # Priority check
   choice_available_under_constraints = []
   if not len(hand1_toak) == 0:
-    choice_available_under_constraints.append(hand1_toak + find_cards_addable_to_existing_melds(hand1_c, melds))
+    available, remaining = find_cards_addable_to_existing_melds(hand1_c, melds)
+    choice_available_under_constraints.append((hand1_toak + available, remaining))
   if not len(hand2_sss) == 0:
-    choice_available_under_constraints.append(hand2_sss + find_cards_addable_to_existing_melds(hand2_c, melds))
-  if len(choice_available_under_constraints == 0):  # no NEW_MELD available, fault to existing
-    choice_available_under_constraints.append(find_cards_addable_to_existing_melds(hand, melds))
+    available, remaining = find_cards_addable_to_existing_melds(hand2_c, melds)
+    choice_available_under_constraints.append((hand2_sss + available, remaining))
+  if len(choice_available_under_constraints) == 0:  # no NEW_MELD available, fault to existing
+    available, remaining = find_cards_addable_to_existing_melds(hand, melds)
+    choice_available_under_constraints.append((available, remaining))
   
   return choice_available_under_constraints  # return it.
 
 def find_cards_addable_to_existing_melds(hand, melds):
   available_cards = []
+  remaining_cards = []
   for card in hand:
+    available = False
     for i in range(len(melds)):  # meld is sorted.
       meld = melds[i]
       meld_cards = meld[0]
       if meld[1] == "same_suit_seq":  # PREFERRED
         if meld_cards[0].same_suit(card) and (meld_cards[0].rank() - card.rank() == 1 or card.rank() - meld_cards[-1].rank() == 1):
           available_cards.append(([card], i))
+          available = True
           break
       elif meld[1] == "n_of_a_kind":
         if meld_cards[0].same_rank(card):
           available_cards.append(([card], i))
+          available = True
           break
-  return available_cards  # a list of tuple
+    if not available:
+      remaining_cards.append(card)
+  return available_cards, remaining_cards  # a list of tuple
 
 '''
   Attempted to generated ALL combinations of melding choices: that is, you can choose any k out of n consecutives,

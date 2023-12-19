@@ -32,10 +32,10 @@ class Card:
     
     def __lt__(self, other):
         # Define less-than for sorting based on the rank attribute.
-        return self._rank < other.rank
+        return self._rank < other._rank
 
     def __repr__(self):
-        return "[" + Card.rank_str[self._rank] + str(self._suit) + "]"
+        return Card.rank_str[self._rank] + str(self._suit)
 
 
     def __eq__(self, other):

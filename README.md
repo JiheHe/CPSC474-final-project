@@ -17,7 +17,7 @@ Play:
       the player may lay down as many meld (matched set) face up on the table as they have without consuming the turn.
       the player may add one or more cards from their hand to any matched set already shown on the table.
     Next, the player discards one card, face up, onto the discard pile.
-      *If the player has drawn from the discard pile, he may not discard the same card on that turn.
+      *If the player has drawn from the discard pile, he may not discard the same card on that turn (DEPRECATED).
   When a player gets rid of all of their cards, they win the game.
     *If the player can get rid of all cards in the "optional" phase, then the round ends and no further discard or play is needed.
   If the last card of the stock has been drawn and no player has gone out, the next player in turn may either take the top of the discard pile, or may turn the discard pile over to form a new stock (without shuffling it) and draw the top card. Play then proceeds as before.

@@ -1,0 +1,6 @@
+Interesting observation:
+If we don't switch non-dealer (starter) position, then the starter has 60% win rate in random vs. random scenario, signaling that
+it is a favored position under the current rule. With the alternating implemented, the dealers have even win rates. The setup is now fair.
+
+Also confirmed that the game works as intended. None of the errors are raised, signaling proper agent implementations following the game
+rules. Also did some print statements to inspect the output to follow through some games; all seem to make sense logically.

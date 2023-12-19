@@ -14,14 +14,17 @@ class RandomPolicy(RummyPolicy):
     def discard(self, hand, player_index, scores, num_cards_in_hands, card_drawn_from_discard_pile, meld_turn_count, melds):
         """Randomly meld (if possible) and discard card"""
         all_poss_melds = find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds)
-        meld_choice = []
-        discard_choice = []
-
-        if all_poss_melds:
-            meld_choice = random.choice(all_possible_melds)
-            cards_left = list(set(hand) - set(meld_choice[0][0]))
-            discard_choice.append(random.choice(cards_left))
-        else:
-            discard_choice.append(random.choice(hand))
+        available, remaining = random.choice(all_poss_melds)
         
+        meld_choice = available
+        if not remaining:
+            discard_choice = []
+        else:
+            discard_choice = [random.choice(remaining)]
+        # elif not card_drawn_from_discard_pile:
+        #     discard_choice = [random.choice(remaining)]
+        # else:
+        #     # if card_drawn_from_discard_pile in remaining:  # NOTE: deprecated rule.
+        #     #     remaining.remove(card_drawn_from_discard_pile)  # cannot discard same card on same turn
+        #     discard_choice = [random.choice(remaining)]
         return discard_choice, meld_choice
