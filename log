@@ -5,8 +5,8 @@ it is a favored position under the current rule. With the alternating implemente
 Also confirmed that the game works as intended. None of the errors are raised, signaling proper agent implementations following the game
 rules. Also did some print statements to inspect the output to follow through some games; all seem to make sense logically.
 
-For MCTS, had to interweave between the policy game instance and the MCTS state transition which is something new. Had to come up with 'hacks' and state shaping that transitions from an imperfect information game into a perfect sceneario capable of MCTS. i.e. random assumption of unseen cards, reward shaping (reasonable), single-player, granularity of states, etc. Much easier with draw_policy currently since only 2 actions all the time, and runtime-wise more friendly.
-Single-player works for discard policy too, reasonably assume.
+For MCTS, had to interweave between the policy game instance and the MCTS state transition which is something new. Had to come up with 'hacks' and state shaping that transitions from an imperfect information game into a perfect sceneario capable of MCTS. i.e. random assumption of unseen cards to mask information (directly using game would be perfect information, violating the reality of the game), reward shaping (reasonable), single-player, granularity of states, etc. Much easier with draw_policy currently since only 2 actions all the time, and runtime-wise more friendly.
+Single-player works for discard policy too, reasonably assuming so.
 
 MCTS slow due to the fact that we have to deepcopy lists of cards for every game states at every node, in order for the references to not mess up.
 And the uncertainty number of turns during a playout introduces high variance. On average, it takes about 5 seconds for the MCTS agent (settings below) to compute one game against a Random agent, currently.
