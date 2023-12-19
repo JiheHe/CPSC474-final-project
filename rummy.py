@@ -81,6 +81,7 @@ class Game:
     draw_policy = policies[p].draw(hands[p],  # your hand
                             p,  # p is "your player index"
                             scores[:],  # all players' scores
+                            [len(hand) for hand in hands], # number of cards in the hand of all players
                             discard[-1],  # top visible card of the discard pile
                             stock.size(),  # num cards left of the stock pile
                             num_turnover[0],  # the current number of turnovers so far
@@ -105,6 +106,7 @@ class Game:
     discard_policy, meld_policy = policies[p].discard(hands[p],  # your hand, NOT deepcopied atm cuz by reference.
                                             p,  # p is "your player index"
                                             scores[:],  # all players' scores
+                                            [len(hand) for hand in hands], # number of cards in the hand of all players
                                             card_drawn_from_discard_pile,  # if applicable. Can't discard the same card drawn from discard pile in this turn.
                                             meld_turn_count,  # number of turns where melding is used for each player
                                             melds)  # all melds on the table)

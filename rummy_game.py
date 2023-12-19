@@ -7,7 +7,7 @@ from game import State
 class State(State):
   '''A state in the Rummy Game, granularity to be defined-
     We have 4 levels of granularity we can choose to model our MCTS, similarly commented in the rummy.py file:
-    # 1. Finest Granularity, move of one player in a turn. 
+    1. Finest Granularity, move of one player in a turn. 
     2. Medium Granularity, moves of all players in a circle of turns. 
     3. Coarse Granularity, playing out a whole round of the game (multiple circles of turns).
     4. Coarest Granularity, playing out the whole game once (multiple rounds).
@@ -65,3 +65,9 @@ class State(State):
         action -- one of the actions in the list returned by get_actions for this state
     """
     pass
+
+
+  def find_all_meldable_sets():
+    '''Overlaps?'''
+    pass
+
