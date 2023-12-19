@@ -16,10 +16,10 @@ class RandomPolicy(RummyPolicy):
         all_poss_melds = find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds)
         meld_choice = []
         discard_choice = []
-        
+
         if all_poss_melds:
             meld_choice = random.choice(all_possible_melds)
-            cards_left = list(set(hand) - set(meld_choice[0]))
+            cards_left = list(set(hand) - set(meld_choice[0][0]))
             discard_choice.append(random.choice(cards_left))
         else:
             discard_choice.append(random.choice(hand))
