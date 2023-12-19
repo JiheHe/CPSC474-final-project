@@ -5,10 +5,6 @@ import random
 class RandomPolicy(RummyPolicy):        
     def draw(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, meld_turn_count, melds):
         """Randomly chooses between drawing from discard pile and stock pile"""
-        
-        if not discard_pile_top_card:
-            return "stock"
-        
         return random.choice(["discard", "stock"]) 
 
     def discard(self, hand, player_index, scores, num_cards_in_hands, card_drawn_from_discard_pile, meld_turn_count, melds):
