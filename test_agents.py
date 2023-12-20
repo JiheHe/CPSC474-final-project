@@ -1,7 +1,7 @@
 import argparse
 from rummy import Game as RummyGame
-from my_policy import RandomPolicy, HeuristicPolicy
 from mcts_policy import BaseMCTSPolicy, AdvanceMCTSPolicy
+from base_policy import RandomPolicy, SimpleGreedyPolicyBASE, HeuristicPolicyBASE
 import sys
 
 class SimulationError(Exception):
@@ -11,11 +11,14 @@ def init_agent(type, time, game):
   if type == 0:
     return RandomPolicy()
   elif type == 1:
-    return HeuristicPolicy()
+    return SimpleGreedyPolicyBASE()
   elif type == 2:
-    return BaseMCTSPolicy(time, game)
+    return HeuristicPolicyBASE()
   elif type == 3:
+    return BaseMCTSPolicy(time, game)
+  elif type == 4:
     return AdvanceMCTSPolicy(time, game)
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description="Test agents for Rummy")
@@ -29,10 +32,10 @@ if __name__ == '__main__':
     raise SimulationError("count must be positive")
   if args.time <= 0:
     raise SimulationError("time must be positive")
-  if args.agent1 < 0 or args.agent1 > 3:
-    raise SimulationError("agent1 must be 0, 1, 2, or 3")
-  if args.agent2 < 0 or args.agent2 > 3:
-    raise SimulationError("agent2 must be 0, 1, 2, or 3")
+  if args.agent1 < 0 or args.agent1 > 4:
+    raise SimulationError("agent1 must be 0, 1, 2, 3, or 4")
+  if args.agent2 < 0 or args.agent2 > 4:
+    raise SimulationError("agent2 must be 0, 1, 2, 3, or 4")
 
   game = RummyGame()
 
