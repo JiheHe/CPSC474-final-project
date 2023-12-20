@@ -1,18 +1,6 @@
 '''Courtesy of CPSC474 FA23 Proj4'''
-'''NOTE: this file is USELESS ATM.'''
 
-from abc import ABC, abstractmethod
-
-class Game(ABC):
-    """ A two-player zero-sum perfect information game.
-    """
-    
-    @abstractmethod
-    def initial_state(self):
-        """ Returns the initial state of this game.
-        """
-        pass
-    
+from abc import ABC, abstractmethod    
     
 class State(ABC):
     """ A state in a game.

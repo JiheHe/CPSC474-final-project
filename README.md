@@ -43,7 +43,7 @@ end in terms of percentage, which is desired for the metrics.
 This game is a zero-sum game.
 The game generally converges. But tie condition is implemented so the playout doesn't go on a long time by chance.
 The rules above are essentially the rules of the original game. For the ease of computation, we implemented four agent-only restrictions to 
-avoid abundunt enumerations. They are:
+avoid abundunt enumerations. They are NOT enforced in the original game's code but soft-imposed as all our agents use them. They are:
   MELD_EVERYTHING_IN_HAND_MELDABLE
   PREFER_NEW_MELDS_OVER_EXISTING_MELDS
   LONGEST_LENGTH_NEW_MELD_PREFERRED

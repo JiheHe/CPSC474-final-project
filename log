@@ -1,25 +1,3 @@
-Interesting observation:
-If we don't switch non-dealer (starter) position, then the starter has 60% win rate in random vs. random scenario, signaling that
-it is a favored position under the current rule. With the alternating implemented, the dealers have even win rates. The setup is now fair.
-
-Also confirmed that the game works as intended. None of the errors are raised, signaling proper agent implementations following the game
-rules. Also did some print statements to inspect the output to follow through some games; all seem to make sense logically.
-
-For MCTS, had to interweave between the policy game instance and the MCTS state transition which is something new. Had to come up with 'hacks' and state shaping that transitions from an imperfect information game into a perfect sceneario capable of MCTS. i.e. random assumption of unseen cards to mask information (directly using game would be perfect information, violating the reality of the game), reward shaping (reasonable), single-player, granularity of states, etc. Much easier with draw_policy currently since only 2 actions all the time, and runtime-wise more friendly.
-Single-player works for discard policy too, reasonably assuming so.
-
-MCTS slow due to the fact that we have to deepcopy lists of cards for every game states at every node, in order for the references to not mess up.
-And the uncertainty number of turns during a playout introduces high variance. On average, it takes about 5 seconds for the MCTS agent (settings below) to compute one game against a Random agent, currently.
-Even with base MCTS on draw_policy only and random discard_policy, and 0.01s compute time for MCTS, and random assumption of unknown cards,
-random agent is getting destroyed 90% of the time.
-
-Potential: expand the scope of meld to include full rule, and apply MCTS to discard policy too. (RIP computer; runtime concern)
-
-
-Observation: after draw-only, new card isn't laid on top. So if we naively call draw next turn, then the discard[-1] errors. We could
-add a None condition to cover this case, or just simply follow the logic: don't draw at all if half start, since that means you drawn already!
-Problem: way too much variance; really hard to control the length of playout. If playout shuts down midway then it's worthless, so even with a short time limit, a playout still could take really really long.
-
 Topic: Integrating MCTS in imperfect-information, sequential-step games. 
 
 Draw-only MCTS: uses MCTS for the draw policy assuming a random discard policy during playout simulation, and a random policy for the discard policy.
@@ -31,11 +9,114 @@ Vs. random agent is trivial. Every agent beats random agent by at least 90%+. Fo
 Tests: Heuristic vs Draw-only (time = 0.1), Heuristic vs Bilinear (time = 0.1), Draw-only vs Bilinear (time = 0.1).  [should have enough time overnight, else tune to 0.05]
 Optional: if we replace the 'random policies' during playout simulation with actual heuristic policies; would they perform better? especially the bilinear one. (literally copy pasta, or inherit into a new class and overwrite).
 
-Writeup layout:
-Time log
-Approaches and notes
-File descriptions
-Work/project contributions
-Result comparison and discussion
-Potential improvements
-Work afterthoughts.
+
+################################################
+Nick's log
+ESTIMATE of time to complete assignment: 13 hours
+
+      Time     Time
+Date  Started  Spent Work completed
+----  -------  ----  --------------
+12/5  10:30am  1:30  Searched and decided on the game with Evan and thoroughly understood how 
+                     the game of choice, Rummy, works by reading the rules and conducting
+                     couple of offline and online playthroughs to fully grasp the game.
+                     Also planned out the roadmap, decided on the strategies, partitioned
+                     the workload, and set up the Github project. 
+12/10 7:00pm   2:00  Discussed the rules with Evan and fully flushed it out condition by
+                     condition in the README.md. Applied modifications and simplifications
+                     to the game after careful considerations in a well-documented manner. 
+                     Also set up some helper files from past assignments and a rough outline
+                     of the repo.
+12/11 9:30pm   7:00  Coded out the whole Rummy game from scratch, originally in one big function.
+                     Made sure the game program follows the rules set in the README.md and is
+                     generalizable to multiple players (instead of hard-coding a 2-player version,
+                     came up with an n-player version with tunable parameters). Also setup the
+                     abstract policy blueprint for the team to implement the agents on.
+12/11 12:00pm  1:00  Another round of discussion with Evan based on rule feasibilities and
+                     adjustments, and refactoring.
+12/15 1:00pm   3:00  Refactored the Rummy game code and made each step more modularizable in
+                     preparation of MCTS's granularity. Also set up a blueprint for Rummy MCTS
+                     and how it would integrate into the policy methods.
+12/18 10:00pm  8:00  Setup the agent_utility function after discussing with Evan many strategies
+                     and approaches on enumerating all possible choices for the ease of meld/discard
+                     action selection. Kept running into more and more complex cases and had to 
+                     proceed with implementing simplification constraint rules that kept the 
+                     choice generation process not runtime and memory consuming. Then used Evan's
+                     random agent to test and debug the Rummy game program to make sure it runs
+                     properly and logically, both by making sure the program runs and manually
+                     tracing the print statements at each step for some playthroughs to attest
+                     that the rules are being followed and round is being executed correctly.
+                     Therefore also implemented the test_agents entrypoint program.
+12/19 10:30am  12:00 Literally woke up with little sleep and went straight into coding. Strategized
+                     basic MCTS and advanced MCTS agents and implemented them. Took lots of time
+                     to come up with valid ways to discretize the imperfect information game
+                     with randomness into states and state-friendly functions. It's like trying to
+                     interweave between an ongoing game instance using policy as well as MCTS
+                     state representation, so lots of thoughts and underlying system structuring and
+                     refactoring here. Spent lots of time debugging, especially the logical twists
+                     with the advanced MCTS approach I chose. Just lots and lots of tracing the
+                     outputs and debugging the issues in general. Conceptual generalization and
+                     creation took me a long long time as well. Discussed evaluation plan with
+                     Evan for him to carry out.
+12/20 11:00am  3:00  Writing the log and documenting the entire process, with detailed descriptions
+                     so aspects of the project, like the base game implemented, can be potentially
+                     used in the future. Focused on my portion of the log and such.          
+                ----
+               37:30 TOTAL time spent
+
+DISCUSSION
+How to run test script:
+  # python test_agents.py --agent1 [#] --agent2 [#] --count [#] --time [#]
+This runs two agents against each other since we are operating on 2-Player Rummy (can be n-player with some quick parameter adjustments, capable of testing multiple agents at once). More details regarding args are in the test_agents.py file.
+The choice of metric is just simple # wins over # games where for the output array, the first number is agent1's average win percentage and second number is agent2's average win percentage, against each other. This is suffice as for each win, multiple rounds of the games need to be played to reach the point threshold, which includes many many turns already. Based on our design of the game.
+Specific command of choice for result evaluation are listed in section 4 below. 
+.
+I'm going to describe our work section by section here.
+0) Quick contribution summary
+1. A fully functional, independent n-player Rummy game that can be extracted and used for future assignemnts
+2. A potential integration pipeline of MCTS into an imperfect-information, sequentially-step (one policy after another where the previous choice impacts the other) game, including an evaluation of results.
+.
+1) Script files
+agent_utility.py - contains helper function that calculuates the set of all possible meld/discard moves, for the ease of usage. 
+base_mcts.py - contains the base MCTS algorithm
+base_policy.py - contains the random agent, simple greedy agent, and heuristical agent.
+deck.py - contains the deck (of cards) class. Borrowed from CS574/required with some modifications applied.
+game.py - contains the abstract state class, a blue print that represents game in terms of states. Borrowed from CS574/required.
+log - this file.
+mcts_policy.py - contains draw-only (base) MCTS agent and bilinear (advanced) MCTS agent.
+policy.py - contains abstract Policy class that any agent can inherit and build on. Rummy's game program uses this interface to interact with agents during play. So a concrete agent need to overwrite the draw and discard policies for it to be used in the game.
+README.md - contains the rules of the Rummy being implemented.
+rummy_game.py - contains base GameState and advanced GameState to be used by the base and advanced MCTS agents, respectively, implementing the State class concretely.
+rummy.py - contains the Rummy game program and the evaluation metric code.
+test_agents.py - the terminal entrypoint file that starts the simulation and evaluation of agents. 
+.
+2) Rummy game implementation and thoughts
+The game implementation is essentially two files: policy.py and rummy.py. Rummy.py hosts the actual game logic fully described in README.md and is n-player compatible with appropriate parameter settings, meaning nothing is harded coded strictly to two players and this code can be used for multiplayer Rummy. Policy.py hosts the draw_policy and discard_policy function that all agents of the Rummy game program must implement, following the docstrings. It's a blueprint that allows as many agents to be created that'll fit into the game. These two files can be independently used anywhere to simulate the Rummy game in README.md, so feel free to use and distribute as you want! The four simplifications at the bottom of README.md are soft-enforced by agent_utility.py, meaning all our agents use the helper function to generate the set of meld/discard moves which are created under these four rules, so the agents we created are following these four rules. These four rules are NOT implemented/enforced in the game program rummy.py, so feel free to exclude these four rules from the independent package. 
+The implementation of the game took longer than I initially expected because the game felt simple at first, but there are decent number of rules to follow and enforce (by raising exceptions) so it ended up taking me a while to code up and debug thoroughly. I'm happy because it could be a potential contribution to future class projects since it works independently and with n-players, so I tried my best to make it proper and good. We had to implement the soft rule because we weren't able to code up the generation of 100% possible combinations of moves as stated in the original game rules for the meld/discard phase, since the enumeration of all such possibilties would take a long run time and large storage, making the simulations much much slower. So we had to impose the four soft rules as we go to simplify the move set generation process, in the form of a soft restriction. To confirm the game works as intended, I ran two random agents against each other and traced the print statements (illustrating every step of the game) to debug code errors here and there. I also confirmed that the game works as intended logically as none of the play errors are raised in the end, signaling that the policies and the agent implementing them do follow the game rules. I validated that the game program works when I ran two random agents against each other for a long period of time for each to obtain 50% win rate, as the non-dealer (starter) position alternates. There is an interesting observation: if we don't switch non-dealer (starter) position, then the starter has 60% win rate in random vs. random scenario, signaling that it is a favored position under the current rule. With the alternating implemented, the random dealers have even win rates. The setup is now fair.
+.
+3) MCTS agent implementation and thoughts
+The first hardship comes from integrating MCTS into a game set up under the "policy" structure. This means transforming the game into MCTS states and shaping some of the factors. Techncially, this means integrating both MCTS execution and general game execution via some structure blending which took effort to think through. For example, I had to divide and modularize the Rummy game code into different levels of granularity that the MCTS can use for the playout, as well as helper functions that it borrows for its state status calculation. It's like having one running instance of the game, but at each step when you need a policy, the information from the policy is extracted and built into a state that is then used for MCTS simulation for that policy. This isn't as bad as coming up with the thoughts to develop a proper MCTS approach, though. For each player's turn, there are two policies needed: draw policy and meld/discard policy. They happen sequentially within the same turn by a player's hand, but then the first policy's result affects the second policy's computation so they need to be treated independently. Since the game is imperfect information with lots of randomness in drawing, it's hard to playout opponent's state assuming optimality like minimax. So we chose a single player MCTS approach such that for the policy that the MCTS is working on, we are going to generate a random sets of not-visible cards based on the current observation of the board to be divided into the assumed_stock and assumed_discard sets, then just have the agent MCTS playout solely by himself from this state with these assumed decks, MCTSing the target policy and randomizing the other at each step. We are doing so because the game is imperfect information, so we are assuming a MDP agent that's only able to infer present state from present information, which is why we are using this random assumption of unseen cards to "mask" the information which could've been otherwise directly grabbed from the game instance, in order to make the game fitting to the realistic version. The reward is cleverly shaped into disliking tie and preferring a shorter number of turns needed to finish. We had to decide on the grandularity of the MCTS playout based on our design, the game can be divided into many steps: an entire one playthrough of the game, each round of the game, each circle of turns from all players, and each turn from one player. We chose the "each round of the game" option under the single-player playout assumption, which is reasonable. The base MCTS agent uses base MCTS for the draw policy that assumes a random meld/discard policy during its playout, and a random policy for the meld/discard policy. This is easier to build because the playout happens sequentially each turn with a "draw->meld/discard" pattern so I can easily call the helper function from Rummy game program. The advanced MCTS agent builds on top of that, using a base MCTS for the draw policy assuming a random meld/discard, but also a base MCTS for the meld/discard policy assuming a random draw. The advanced version uses two MCTS sequentially, hence why I named it bilinear. It's actually quite tricky to implement. The draw policy is the same as the base one, but then for the discard policy, it happens right after the draw policy, so the MCTS nodes for the discard policy assumes that at this discard node, the drawing has already been done. So for the sake of single-player playout, after many debug, I had to go back into the Rummy game program and adjust the player_move function with four new boolean parameters so that this function can be used for MCTS playout as well. But the general function and indepdence of the game isn't impacted. Essentially, the playout has to happen in a "half-step ahead" state, i.e. meld/discard (the starting point of computation) -> draw -> meld/discard -> .... -> end check. And it's pretty easy to run into logic bugs. So I had to trace the outputs and fix them one by one without disrupting the flow and independence of the Rummy game program, which took me a long long time. In the end, I was able to get this bilinear, duo-MCTS approach to work, which has enough complexity within itself to deal with.
+However, it is worth noting that there are many areas of improvements. If we use statistical card-tracking, we can generate a more accurate assumed_stack and assumed_discard piles that fit the current status of the board, instead of randomly guessing which could contain discarded cards that are not visible. But that blurs the line between perfect and imperfect information in a realistic setting, so we didn't implement that. We could also improve the reward shaping in the single-player playout so it considers more factors such as number of points of everyone, number of hands of everyone, potential number of points in everyone's hand in the end, etc. We could've also chosen a better playout strategy, but we weren't able to come up with any of them. Currently, both policies assume random of the other policy during MCTS playout, but we could've obtained a more accurate result if we use heuristic policy for the MCTS playouts, since they are more accurate given how performant the heuristic agent is and with the ability to "simulate the future." We did try using the MCTS draw policy for the MCTS discard policy's playout or the other way around, which in theory produces better result but in reality too impractical to run given the amount of compute it consumes. For example, for each state's playout, there's another MCTS instance running random (else chicken vs egg cycle) within which expands into expensive and infeasible polynomial runtime. So it's better to keep the current bilinear structure and replace with better playout simulation (all points mentioned above) instead. Furthermore, we could've applied enhancements onto the MCTS process, like AMAF or Rave. But this isn't the focus of our project as we are curious to see the integration and performance of MCTS in an imperfect information, sequentially-related policies game which we never done in class before. There is definitely much more complexity attempting to bringing MCTS into this game's decision making, which is more interesting than testing MCTS vs some enhanced version. We've designed a potential setup of integrating such, which is sufficient work given our other contributions. 
+.
+4) Result comparison and discussion
+To summarize, here are our four agents:
+
+
+
+4) General hardships, after-thoughts, and experiences
+
+
+Too much randomness. 
+Deep copy takes runtime, also variance.
+
+MCTS slow due to the fact that we have to deepcopy lists of cards for every game states at every node, in order for the references to not mess up.
+And the uncertainty number of turns during a playout introduces high variance. On average, it takes about 5 seconds for the MCTS agent (settings below) to compute one game against a Random agent, currently.B
+
+Problem: way too much variance; really hard to control the length of playout. If playout shuts down midway then it's worthless, so even with a short time limit, a playout still could take really really long.
+
+Even with base MCTS on draw_policy only and random discard_policy, and 0.01s compute time for MCTS, and random assumption of unknown cards,
+random agent is getting destroyed 90% of the time.
+
+
+
+Really grate for the raise exceptions.
