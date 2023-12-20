@@ -19,3 +19,23 @@ Potential: expand the scope of meld to include full rule, and apply MCTS to disc
 Observation: after draw-only, new card isn't laid on top. So if we naively call draw next turn, then the discard[-1] errors. We could
 add a None condition to cover this case, or just simply follow the logic: don't draw at all if half start, since that means you drawn already!
 Problem: way too much variance; really hard to control the length of playout. If playout shuts down midway then it's worthless, so even with a short time limit, a playout still could take really really long.
+
+Topic: Integrating MCTS in imperfect-information, sequential-step games. 
+
+Draw-only MCTS: uses MCTS for the draw policy assuming a random discard policy during playout simulation, and a random policy for the discard policy.
+Bilinear MCTS: uses MCTS for the draw policy first assuming a random discard policy during playout simulation, and a subsequent MCTS discard policy assuming a random draw policy during playout simulation. 
+
+Tests:
+4 agents, indexed 0 (random), 1 (heuristic), 2 (draw-only MCTS), 3 (bilinear MCTS)
+Vs. random agent is trivial. Every agent beats random agent by at least 90%+. For the interest of time, the results won't be shown here. Random agent is primarily used for tuning and benchmarking. (we can run it for like 10000 games as a quick example)
+Tests: Heuristic vs Draw-only (time = 0.1), Heuristic vs Bilinear (time = 0.1), Draw-only vs Bilinear (time = 0.1).  [should have enough time overnight, else tune to 0.05]
+Optional: if we replace the 'random policies' during playout simulation with actual heuristic policies; would they perform better? especially the bilinear one. (literally copy pasta, or inherit into a new class and overwrite).
+
+Writeup layout:
+Time log
+Approaches and notes
+File descriptions
+Work/project contributions
+Result comparison and discussion
+Potential improvements
+Work afterthoughts.

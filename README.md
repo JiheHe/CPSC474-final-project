@@ -2,6 +2,9 @@ Outline for 2 player Rummy
 https://bicyclecards.com/how-to-play/rummy-rum
 Ranking: K (highest) to A (lowest)
 
+This page explains how the game works and the set of rules/modifications we are following.
+For a detailed report and logistics, please check 'log.'
+
 Setup:
   One deck of cards, standard
   Each player is dealt 10 cards from the deck one at a time face-down without replacements
@@ -39,3 +42,10 @@ end in terms of percentage, which is desired for the metrics.
 # NOTE:
 This game is a zero-sum game.
 The game generally converges. But tie condition is implemented so the playout doesn't go on a long time by chance.
+The rules above are essentially the rules of the original game. For the ease of computation, we implemented four agent-only restrictions to 
+avoid abundunt enumerations. They are:
+  MELD_EVERYTHING_IN_HAND_MELDABLE
+  PREFER_NEW_MELDS_OVER_EXISTING_MELDS
+  LONGEST_LENGTH_NEW_MELD_PREFERRED
+  PREFER_SEQUENCE_OVER_N_OF_KIND_FOR_EXISTING
+More details are in the comments of agent_utility.py near the middle of the page.
