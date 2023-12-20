@@ -67,14 +67,18 @@ class Game:
     return [card for card in counts.keys() if counts[card] == 1]  # the remaining cards in hand.  # new list is less efficient than .remove since by reference.
 
   # NOTE: Finest Granularity, move of one player
-  def player_move(self, p, policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds, MCTS_draw_policy=False, MCTS_discard_policy=False, half_start=False):
+  def player_move(self, p, policies, stock, discard, num_turnover, hands, scores, meld_turn_count, melds, 
+                  MCTS_draw_policy=False, MCTS_discard_policy=False, half_start=False, draw_only=False):
     '''Executes one turn of the given player
       All inputs needing to be updated are passed by reference (mutable objects)
       Returns True if game ended on this turn, None otherwise
     '''
     # print("player " + str(p) + ", at start hand is " + str(hands[p]))
     # print("melds are " + str(melds))
-    # print("current state: stock-" + str(stock.size()) + ", discard- " + str(discard[-1]) + " " + str(len(discard)))
+    # print("current state: stock-" + str(stock._cards) + " " + str(stock.size()))
+    # print("current state discard- " + str(discard) + " " + str(len(discard)))
+    if discard and discard[0] is None:
+      exit(1)
 
     # Check if the game is tie now.
     if self.tie(num_turnover[0], stock.size()):  # stock has been burned through num_turnover amount of times. Tie.
@@ -82,20 +86,20 @@ class Game:
 
     # Draw
     # Draw Policy either returns "stock" for drawing the top card from stock or "discard" for taking the top card from discard pile.
-    if MCTS_draw_policy:
-      draw_policy = policies[p][0]
-    else:
-      draw_policy = policies[p].draw(hands[p],  # your hand
-                              p,  # p is "your player index"
-                              scores[:],  # all players' scores
-                              [len(hand) for hand in hands], # number of cards in the hand of all players
-                              discard[-1],  # top visible card of the discard pile
-                              stock.size(),  # num cards left of the stock pile
-                              num_turnover[0],  # the current number of turnovers so far
-                              meld_turn_count,  # number of turns where melding is used for each player
-                              melds)  # all melds on the table
     card_drawn_from_discard_pile = None
-    if not half_start:
+    if not half_start:  # don't draw if half_start / discard_only.
+      if MCTS_draw_policy:
+        draw_policy = policies[p][0]
+      else:
+        draw_policy = policies[p].draw(hands[p],  # your hand
+                                p,  # p is "your player index"
+                                scores[:],  # all players' scores
+                                [len(hand) for hand in hands], # number of cards in the hand of all players
+                                discard[-1],  # top visible card of the discard pile
+                                stock.size(),  # num cards left of the stock pile
+                                num_turnover[0],  # the current number of turnovers so far
+                                meld_turn_count,  # number of turns where melding is used for each player
+                                melds)  # all melds on the table
       if draw_policy == "stock":  # draw the top card from stock pile
         if stock.size() == 0:  # stock pile is empty
           stock._cards = list(reversed(discard))  # turn over the discard pile and use it as the new stock pile
@@ -108,8 +112,12 @@ class Game:
         card_drawn_from_discard_pile = top_card
       else:
         raise Exception(f"Invalid Draw Policy Response: {draw_policy}. Must be 'stock' or 'discard.'")
-    
-    # print("player " + str(p) + ", after drawing hand is " + str(hands[p]))
+      
+      # print("player " + str(p) + ", after drawing hand is " + str(hands[p]))
+
+    if draw_only:  # for Advanced MCTS, order flipped.
+      # print("Draw only triggered")
+      return
 
     # Discard & Optional (can also win here)
     # Discard Policy returns a [Card] to discard and [([Cards],decision)([Cards],decision)...] to meld away. Can be empty lists!
@@ -188,6 +196,7 @@ class Game:
         raise Exception(f"Invalid meld decision: {decision}. Must be 'new' or int (existing meld index).")
       
     # Check if anyone has won after melding.
+    # print("Hand is: " + str(hands[p]))
     if self.round_ends(hands):
       return True
 
@@ -312,5 +321,5 @@ class Game:
       game_winners, max_score = self.play(policies, lambda mess: None)  # no log function for now.
       for winner in game_winners:  # update for all winners.
         wins[winner] += 1 / len(game_winners)  # this ensures the final total adds to 100%
-      print(f"Iteration {g+1} finished.")
+      print(f"Iteration {g+1} finished. Running average: {[win / (g+1) for win in wins]}")
     return [win / count for win in wins]

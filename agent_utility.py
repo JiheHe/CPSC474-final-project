@@ -72,6 +72,7 @@ def find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds):
     choice_available_under_constraints.append((hand2_sss + available, remaining))
   if len(choice_available_under_constraints) == 0:  # no NEW_MELD available, fault to existing
     available, remaining = find_cards_addable_to_existing_melds(hand, melds)
+    # print("Avaialble: " + str(available) + "Remaining: " + str(remaining))
     choice_available_under_constraints.append((available, remaining))
   
   return choice_available_under_constraints  # return it.
@@ -79,6 +80,7 @@ def find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds):
 def find_cards_addable_to_existing_melds(hand, melds):
   available_cards = []
   remaining_cards = []
+  # print("hand is here: " + str(hand))
   for card in hand:
     available = False
     for i in range(len(melds)):  # meld is sorted.
@@ -96,6 +98,7 @@ def find_cards_addable_to_existing_melds(hand, melds):
           break
     if not available:
       remaining_cards.append(card)
+  # print("Reminaing after: " + str(remaining_cards))
   return available_cards, remaining_cards  # a list of tuple
 
 '''

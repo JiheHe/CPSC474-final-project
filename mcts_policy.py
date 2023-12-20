@@ -1,7 +1,7 @@
 from policy import RummyPolicy
 from agent_utility import find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets
 from base_mcts import base_mcts_policy
-from rummy_game import GameState
+from rummy_game import GameState, AdvancedGameState
 from deck import Deck
 import copy
 import random
@@ -43,7 +43,8 @@ class BaseMCTSPolicy(RummyPolicy):
     reconstructed_stock._cards = assumed_stock_cards
     # Randomly remove sum(num_cards_in_hands)-num_cards_of_you from the remaining to assume other players' cards
     assumed_discard_cards = random.sample(remaining_cards, k = len(remaining_cards) - (sum(num_cards_in_hands)-len(hand)))
-    assumed_discard_cards.append(discard_pile_top_card)
+    if discard_pile_top_card:
+      assumed_discard_cards.append(discard_pile_top_card)
     # print(len(assumed_discard_cards))
     # print("discard " + str(assumed_discard_cards))
     return reconstructed_stock, assumed_discard_cards
@@ -55,30 +56,39 @@ class BaseMCTSPolicy(RummyPolicy):
     reconstructed_stock, assumed_discard_cards = self.generate_unseen_card_distribution(hand, discard_pile_top_card, num_cards_in_hands, num_cards_stock_pile, melds) 
 
     root_state = GameState(self.game, hand, reconstructed_stock, assumed_discard_cards, num_turnover, 
-                           meld_turn_count[player_index], melds, self.discard, 0, root=True)
+                           meld_turn_count[player_index], melds, self.playout_random_discard, None, 0)
     mcts = base_mcts_policy(self.time)  # a callable function
     choice = mcts(root_state)
     return choice
-
-  def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, card_drawn_from_discard_pile, meld_turn_count, melds):
-    # Use the heuristical discard; TODO: update later.
-    """Randomly meld (if possible) and discard card"""
+  
+  def playout_random_discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, card_drawn_from_discard_pile, meld_turn_count, melds):
+    # A weak discard policy just for playout
     all_poss_melds = find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(hand, melds)
     available, remaining = random.choice(all_poss_melds)
     meld_choice = available
     discard_choice = [] if not remaining else [random.choice(remaining)]
     return discard_choice, meld_choice
-  
+
+  def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, card_drawn_from_discard_pile, meld_turn_count, melds):
+    # Use the heuristical discard; random discard for now. TODO: update later.
+    """Randomly meld (if possible) and discard card"""
+    return self.playout_random_discard(hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, card_drawn_from_discard_pile, meld_turn_count, melds)
+
 
 class AdvanceMCTSPolicy(BaseMCTSPolicy):
+  # Still using the advance draw for the actual draw_policy.
+
+  def playout_random_draw(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, meld_turn_count, melds):
+    # A weak draw policy just for playout
+    return random.choice(["stock", "discard"])
 
   # Carry out MCTS on discard too
   def discard(self, hand, player_index, scores, num_cards_in_hands, discard_pile_top_card, num_cards_stock_pile, num_turnover, card_drawn_from_discard_pile, meld_turn_count, melds):
     reconstructed_stock, assumed_discard_cards = self.generate_unseen_card_distribution(hand, discard_pile_top_card, num_cards_in_hands, num_cards_stock_pile, melds) 
-  
-    root_state = GameState(self.game, hand, reconstructed_stock, assumed_discard_cards, num_turnover, 
-                           meld_turn_count[player_index], melds, self.discard, 0, root=True)
+
+    draw_strategy = self.playout_random_draw  # use self.draw for recursion.
+    root_state = AdvancedGameState(self.game, hand, reconstructed_stock, assumed_discard_cards, num_turnover, 
+                           meld_turn_count[player_index], melds, None, draw_strategy, 0)  # NOTE: replace to self.draw for recursion.
     mcts = base_mcts_policy(self.time)  # a callable function
     choice = mcts(root_state)
-
-    pass
+    return choice

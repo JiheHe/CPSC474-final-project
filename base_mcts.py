@@ -88,6 +88,7 @@ def traverse(root):  # traverse + expand would be more accurate.
   '''
   current = root
   while not current.state.is_terminal():
+    # print("action cache len at visit: " + str(len(current.actions_cache)))
     if len(current.actions_cache) == len(current.children):  # if fully expanded:
       # Find the UCT leaf
       UCT_values = [compute_UCT(child_node, current) for child_node in current.children]
@@ -146,7 +147,12 @@ def best_action(root):
   '''
   # Get the visit counts of children
   # visit_counts = [child_node.visit_count for child_node in root.children]
-
+  if not root.children:  # Check if there are no children; non of the children expanded, potentially due to budget constraint.
+    # Fallback: Return a random move or a predefined default move
+    return random.choice(root.actions_cache) if root.actions_cache else None
+  # print("Root action cache: " + str(root.actions_cache))
+  # print("Root children" + str(root.children))
+  # print("Root status: " + str(root.state.is_terminal()))
   # Trying best Mean Reward (it's doing about the same as visit count?)
   mean_rewards = [child_node.total_reward / child_node.visit_count for child_node in root.children]
   # Player 0 makes the first move. Player 1 makes the second move. Reward is always in P0's perspective

@@ -14,3 +14,8 @@ Even with base MCTS on draw_policy only and random discard_policy, and 0.01s com
 random agent is getting destroyed 90% of the time.
 
 Potential: expand the scope of meld to include full rule, and apply MCTS to discard policy too. (RIP computer; runtime concern)
+
+
+Observation: after draw-only, new card isn't laid on top. So if we naively call draw next turn, then the discard[-1] errors. We could
+add a None condition to cover this case, or just simply follow the logic: don't draw at all if half start, since that means you drawn already!
+Problem: way too much variance; really hard to control the length of playout. If playout shuts down midway then it's worthless, so even with a short time limit, a playout still could take really really long.

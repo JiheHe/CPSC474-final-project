@@ -24,7 +24,7 @@ class GameState(State):
     This is for drawing policy only at the moment.
   '''
 
-  def __init__(self, game, hand, stock_cards, discard_cards, num_turnover, meld_turn_count, melds, discard_policy, num_turn_so_far, root=False):
+  def __init__(self, game, hand, stock_cards, discard_cards, num_turnover, meld_turn_count, melds, discard_policy, draw_policy, num_turn_so_far):
     # These information are related to the current turn of the player, inherited from Policy
     self.game = game  # perfection information instance currently, not fair; need some masking to simulate the unknowing state. Otherwise just a function caller.
     # Other state properties
@@ -35,6 +35,7 @@ class GameState(State):
     self.meld_turn_count_self = meld_turn_count # not possible given current melding constraints for simplification...
     self.melds = melds  # DEEPCOPY later at playout; don't want to disturb the original references
     self.discard_policy = discard_policy  # first order function.
+    self.draw_policy = draw_policy
     self.num_turn_so_far = num_turn_so_far
 
   def is_terminal(self):
@@ -111,7 +112,7 @@ class GameState(State):
     # print("after DPMOVE: " + str(succ_hand))
     # Set up the return state (new copy pretty much)
     succ = GameState(self.game, succ_hand[0], succ_stock, succ_discard, succ_num_turnover[0], succ_meld_turn_count_self[0], 
-                     succ_melds, self.discard_policy, self.num_turn_so_far + 1)
+                     succ_melds, self.discard_policy, self.draw_policy, self.num_turn_so_far + 1)
     return succ
 
 class Monkey(list):
@@ -126,13 +127,15 @@ class Monkey(list):
   def discard(self):
     pass
 
-class DiscardGameState(GameState):
+class AdvancedGameState(GameState):
+  # Overwrite
   def get_actions(self):
     """ Returns a list of possible actions in this nonterminal state.
         The representation of each state is left to the implementation.
 
         self -- a nonterminal state
     """
+    # print("Hand at get_actions is " + str(self.hand))
     all_poss_melds = find_all_MUST_MELD_ALL_AVAILABLE_meldable_sets(self.hand, self.melds)
     choices = []
     for available, remaining in all_poss_melds:
@@ -141,9 +144,11 @@ class DiscardGameState(GameState):
       else:
         for card in remaining:
           choices.append(([card], available))
-
+    
+    # print(choices)
     return choices  # MCTS for discarding only (random draw)
   
+  # Overwrite
   def successor(self, action):
     """ Returns the state that results from the given action in this nonterminal state.
 
@@ -169,10 +174,25 @@ class DiscardGameState(GameState):
                           scores=[], 
                           meld_turn_count=succ_meld_turn_count_self, 
                           melds=succ_melds,
-                          MCTS_discard_policy=True
+                          MCTS_discard_policy=True,
+                          half_start=True
                           )
     # print("after DPMOVE: " + str(succ_hand))
+    if not self.game.round_ends(succ_hand) and not self.game.tie(succ_num_turnover, succ_stock.size()):  # possible that the game can end after discard. Remember we are starting from second half!
+      # Prepare draw result for the next half_start, if the round doesn't end here.
+      self.game.player_move(p=0, 
+                            policies=[temp_policy], 
+                            stock=succ_stock, 
+                            discard=succ_discard, 
+                            num_turnover=succ_num_turnover, 
+                            hands=succ_hand, 
+                            scores=[], 
+                            meld_turn_count=succ_meld_turn_count_self, 
+                            melds=succ_melds,
+                            MCTS_draw_policy=False,
+                            draw_only=True
+                          )
     # Set up the return state (new copy pretty much)
-    succ = GameState(self.game, succ_hand[0], succ_stock, succ_discard, succ_num_turnover[0], succ_meld_turn_count_self[0], 
-                     succ_melds, self.discard_policy, self.num_turn_so_far + 1)
+    succ = AdvancedGameState(self.game, succ_hand[0], succ_stock, succ_discard, succ_num_turnover[0], succ_meld_turn_count_self[0], 
+                     succ_melds, self.discard_policy, self.draw_policy, self.num_turn_so_far + 1)  # +1 could have an offset, but all offset so evens out
     return succ
