@@ -1,0 +1,12 @@
+#!/bin/bash
+echo 'SimpleGreedyPolicyBASE vs. BaseMCTSPolicy (5 iterations)'
+python3 test_agents.py --agent1 1 --agent2 3 --count 5
+
+echo 'HeuristicPolicyBASE vs. BaseMCTSPolicy (5 iterations)'
+python3 test_agents.py --agent1 2 --agent2 3 --count 5
+
+echo 'SimpleGreedyPolicyBASE vs. AdvanceMCTSPolicy (5 iterations)'
+python3 test_agents.py --agent1 1 --agent2 4 --count 5
+
+echo 'HeuristicPolicyBASE vs. AdvanceMCTSPolicy (5 iterations)'
+python3 test_agents.py --agent1 2 --agent2 4 --count 5
