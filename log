@@ -163,16 +163,16 @@ We left our agents running against each other overnight. The MCTS agents were gi
 NOTE: count is an upperbound, but the current average during each iteration is printed.
 
 # python test_agents.py --agent1 1 --agent2 3 --count 1000000 --time 0.1
-Simple Greedy Base vs Base MCTS: [0.18107173725151254, 0.8189282627484875], 1157 iterations
+Simple Greedy Base vs Base MCTS: [0.18647234678624813, 0.8135276532137519], 1338 iterations
 
 # python test_agents.py --agent1 2 --agent2 3 --count 1000000 --time 0.1
-Heuristic Base vs Base MCTS: [0.9976179132920439, 0.0023820867079561697], 2099 iterations
+Heuristic Base vs Base MCTS: [0.9971134020618557, 0.00288659793814433], 2425 iterations
 
 # python test_agents.py --agent1 1 --agent2 4 --count 1000000 --time 0.1
-Simple Greedy Base vs. Advanced MCTS: [0.143317230273752, 0.856682769726248], 621 iterations
+Simple Greedy Base vs. Advanced MCTS: [0.14563106796116504, 0.8543689320388349], 721 iterations
 
 # python test_agents.py --agent1 2 --agent2 4 --count 1000000 --time 0.1
-Heuristic Base vs Advanced MCTS: [0.9981325863678805, 0.0018674136321195146], 1071 iterations
+Heuristic Base vs Advanced MCTS: [0.9975961538461539, 0.002403846153846154], 1248 iterations
 
 Even though the MCTS agents don't work with much game information and conducts random playouts (and Simple Greedy Base is not a random policy), the MCTS agents still beat the Simple Greedy Base pretty easily. This shows the power of Monte Carlo simulations in informing game strategy. Even though it doesn't use much information and doesn't at all know the opponent's strategy, it still gives a strong indication of what moves are good and what moves aren't.
 
