@@ -22,8 +22,8 @@ def init_agent(type, time, game):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description="Test agents for Rummy")
-  parser.add_argument('--agent1', type=int, action="store", default=0, help='Agent type (0=random, 1=heuristic, 2=MCTS, 3=Advanced-MCTS)')
-  parser.add_argument('--agent2', type=int, action="store", default=0, help='Agent type (0=random, 1=heuristic, 2=MCTS, 3=Advanced-MCTS)')
+  parser.add_argument('--agent1', type=int, action="store", default=0, help='Agent type (0=random, 1=simple-greedy, 2=heuristic, 3=MCTS, 4=Advanced-MCTS)')
+  parser.add_argument('--agent2', type=int, action="store", default=0, help='Agent type (0=random, 1=simple-greedy, 2=heuristic, 3=MCTS, 4=Advanced-MCTS)')
   parser.add_argument('--count', type=int, action="store", default=1, help='number of games to play (default=1)')
   parser.add_argument('--time', type=float, action="store", default=0.1, help='time for MCTS per move')
   args = parser.parse_args()

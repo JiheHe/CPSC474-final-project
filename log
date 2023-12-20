@@ -1,17 +1,24 @@
 Topic: Integrating MCTS in imperfect-information, sequential-step games. 
+# QUICK CONTRIBUTION SUMMARY
+1. A fully functional, independent n-player Rummy game that can be extracted and used for future assignemnts
+2. A potential integration pipeline of MCTS into an imperfect-information, sequentially-step (one policy after another where the previous choice impacts the other) game, including an evaluation of results.
+###################################################################################################################################################
+EVAN LEE'S LOG [CPSC 474] (All time converted to ET)
+ESTIMATE of time to complete assignment: 15 hours
 
-Draw-only MCTS: uses MCTS for the draw policy assuming a random discard policy during playout simulation, and a random policy for the discard policy.
-Bilinear MCTS: uses MCTS for the draw policy first assuming a random discard policy during playout simulation, and a subsequent MCTS discard policy assuming a random draw policy during playout simulation. 
-
-Tests:
-4 agents, indexed 0 (random), 1 (heuristic), 2 (draw-only MCTS), 3 (bilinear MCTS)
-Vs. random agent is trivial. Every agent beats random agent by at least 90%+. For the interest of time, the results won't be shown here. Random agent is primarily used for tuning and benchmarking. (we can run it for like 10000 games as a quick example)
-Tests: Heuristic vs Draw-only (time = 0.1), Heuristic vs Bilinear (time = 0.1), Draw-only vs Bilinear (time = 0.1).  [should have enough time overnight, else tune to 0.05]
-Optional: if we replace the 'random policies' during playout simulation with actual heuristic policies; would they perform better? especially the bilinear one. (literally copy pasta, or inherit into a new class and overwrite).
-
-
-################################################
-Nick's log
+      Time     Time
+Date  Started  Spent   Work completed
+----  -------  ----    --------------
+12/5 10;30am   1:30       Picked game, understood rules, played a few games, and discussed initial plans for agents
+12/18 10:00pm  4:30  familiarized myself with game code, discussed with Nick about what we would implement, then left his dorm and worked solo to build random policy agent
+12/19  2:00pm  3:30  fixed bug (ended up being local Python version) and thought about heuristics / strategies and started building heuristic agent. After adding only one rule, 100-0’d random agent and 10-0’d MCTS agent at that time (shuttle to airport)
+12/19  7:30pm  5:00 built stronger and stronger heuristic agent via adding strategies and rules(on plane after takeoff and before landing)
+12/20  4:00am  2:30 fixed bug(s) with discard list, separated into two baseline agents: simple greedy agent and heuristic agent, started overnight tests (after got home from airport)
+12/20  11:45am 2:15 finished logs, did write-up, and cleaned up everqything for submission (next morning)
+               ----
+               19:15  TOTAL time spent
+###################################################################################################################################################
+JIHE "NICK" HE'S [CPSC 574] LOG
 ESTIMATE of time to complete assignment: 13 hours
 
       Time     Time
@@ -58,24 +65,24 @@ Date  Started  Spent Work completed
                      outputs and debugging the issues in general. Conceptual generalization and
                      creation took me a long long time as well. Discussed evaluation plan with
                      Evan for him to carry out.
-12/20 11:00am  3:00  Writing the log and documenting the entire process, with detailed descriptions
+12/20 11:00am  3:30  Writing the log and documenting the entire process, with detailed descriptions
                      so aspects of the project, like the base game implemented, can be potentially
                      used in the future. Focused on my portion of the log and such.          
                 ----
-               37:30 TOTAL time spent
-
+               38:00 TOTAL time spent
+###################################################################################################################################################
 DISCUSSION
 How to run test script:
   # python test_agents.py --agent1 [#] --agent2 [#] --count [#] --time [#]
 This runs two agents against each other since we are operating on 2-Player Rummy (can be n-player with some quick parameter adjustments, capable of testing multiple agents at once). More details regarding args are in the test_agents.py file.
 The choice of metric is just simple # wins over # games where for the output array, the first number is agent1's average win percentage and second number is agent2's average win percentage, against each other. This is suffice as for each win, multiple rounds of the games need to be played to reach the point threshold, which includes many many turns already. Based on our design of the game.
-Specific command of choice for result evaluation are listed in section 4 below. 
-.
+Specific command of choice for result evaluation are listed in section 5 below. 
+###################################################################################################################################################
 I'm going to describe our work section by section here.
 0) Quick contribution summary
 1. A fully functional, independent n-player Rummy game that can be extracted and used for future assignemnts
 2. A potential integration pipeline of MCTS into an imperfect-information, sequentially-step (one policy after another where the previous choice impacts the other) game, including an evaluation of results.
-.
+###################################################################################################################################################
 1) Script files
 agent_utility.py - contains helper function that calculuates the set of all possible meld/discard moves, for the ease of usage. 
 base_mcts.py - contains the base MCTS algorithm
@@ -89,34 +96,99 @@ README.md - contains the rules of the Rummy being implemented.
 rummy_game.py - contains base GameState and advanced GameState to be used by the base and advanced MCTS agents, respectively, implementing the State class concretely.
 rummy.py - contains the Rummy game program and the evaluation metric code.
 test_agents.py - the terminal entrypoint file that starts the simulation and evaluation of agents. 
-.
+###################################################################################################################################################
 2) Rummy game implementation and thoughts
 The game implementation is essentially two files: policy.py and rummy.py. Rummy.py hosts the actual game logic fully described in README.md and is n-player compatible with appropriate parameter settings, meaning nothing is harded coded strictly to two players and this code can be used for multiplayer Rummy. Policy.py hosts the draw_policy and discard_policy function that all agents of the Rummy game program must implement, following the docstrings. It's a blueprint that allows as many agents to be created that'll fit into the game. These two files can be independently used anywhere to simulate the Rummy game in README.md, so feel free to use and distribute as you want! The four simplifications at the bottom of README.md are soft-enforced by agent_utility.py, meaning all our agents use the helper function to generate the set of meld/discard moves which are created under these four rules, so the agents we created are following these four rules. These four rules are NOT implemented/enforced in the game program rummy.py, so feel free to exclude these four rules from the independent package. 
 The implementation of the game took longer than I initially expected because the game felt simple at first, but there are decent number of rules to follow and enforce (by raising exceptions) so it ended up taking me a while to code up and debug thoroughly. I'm happy because it could be a potential contribution to future class projects since it works independently and with n-players, so I tried my best to make it proper and good. We had to implement the soft rule because we weren't able to code up the generation of 100% possible combinations of moves as stated in the original game rules for the meld/discard phase, since the enumeration of all such possibilties would take a long run time and large storage, making the simulations much much slower. So we had to impose the four soft rules as we go to simplify the move set generation process, in the form of a soft restriction. To confirm the game works as intended, I ran two random agents against each other and traced the print statements (illustrating every step of the game) to debug code errors here and there. I also confirmed that the game works as intended logically as none of the play errors are raised in the end, signaling that the policies and the agent implementing them do follow the game rules. I validated that the game program works when I ran two random agents against each other for a long period of time for each to obtain 50% win rate, as the non-dealer (starter) position alternates. There is an interesting observation: if we don't switch non-dealer (starter) position, then the starter has 60% win rate in random vs. random scenario, signaling that it is a favored position under the current rule. With the alternating implemented, the random dealers have even win rates. The setup is now fair.
-.
-3) MCTS agent implementation and thoughts
+###################################################################################################################################################
+3) Random/Simple-Greedy/Heuristic agent implementation and thoughts
+RANDOM POLICY DISCUSSION
+At first, we implemented a random policy so that we could use it as a sanity check to make sure our initial MCTS and baseline agents were wokring properly. The random policy agent itself was not used in the final tests, but can be seen as Agent 0.
+
+As we talked about in our video, our first baseline agent is a relatively simple greedy policy agent. In particular, it's a simple greedy policy that:
+    1. Draws from discard pile if it allows itself to meld
+    2. Melds if possible
+    3. Avoids discarding cards that are part of a run or set draw (two consecutive, same-suit cards that could form a run or two of a kind)
+    """ 
+Essentially, it will leap at any immediate reward (e.g. getting a run or a set)
+
+HEURISTIC AGENT DISCUSSION
+INITIAL HEURISTIC AGENT
+Result: Was badly beating both random MCTS implementantions at that point in time
+The bulk of the work on the baseline agents went into the heuristic agent. After a simple rule only for discard was implemented that ranked cards by discard desirability, it was beating both the random and current MCTS implementations. 
+
+This rule was revolved around the idea that you generally want to discard cards that are higher in value, all else being equal, in order to minimize the points that you give up in the case that you lose. More specifically, although all face cards and 10 are worth the same, we ranked K to be the highest to discard, followed by Q, followed by J and 10. This is because K and Q mathematically fit into less runs and so discarding those reduces the likelihood that your opponent finds your discard card useful. The rest of the ranking was 9,8,...,1 because of the respective points they corresponded to for your opponent in the case of a loss.
+
+The initial plan was to define when discard options were 'not equal' and then use this rule when the discard options were equal (aka none being clearly better discards than the other). However, it ended up that this rule overpowered. It's likely due to the specific version of Rummy that we decided to focus on where you're forced to meld if you have the ability to do so. But this makes sense because the strategy doesn't have a clearly dominating response. The opponent can't just decide to collect the high cards because then they would be giving up a lot of points if they lose. If they decide to use a similar prefer-low-card algorithm, they're only equal.
+
+HEURISTIC AGENT V2
+Result: KO'd the intial heuristic agent (~100% win rate)
+
+The main reason for this improvement was a draw rule that said, all else equal, to draw from the discard pile if the card was 6 or less in value and to draw from the stock pile otherwise. The 6 came from the fact that the sum of the values in any suit is 85 (1+2+3+...+10+10+10+10) and so the average card value that you can expect from the stock pile given no other information is roughly 6.5. And so to minimize the value of the card you drew you'd wamt to draw from the discard pile if the card was 6 or less in value and to draw from the stock pile otherwise.
+
+The other new rules were improving the agent as well, but we wanted better as we had the goal of having each heuristic agent version completely thrash the previous heuristic agent version. So we experimented more creatively to push the boundaries of our agent.
+
+This was one of those rules that was not expected to work. It was more or less tried as a curiosity since the idea of getting rid of lower cards was working way better than expected for the draw policy. 
+
+It's not as intuitive of a rule because players typically use the draw pile to try to make sets or runs. A typical strategy, for instance, might be taking the discard pile card if it gives them two cards of the same suit in a row or a pair and taking a card from the stock pile otherwise. 
+
+But our results seem to point to the fact that in doing, you may pick and hold onto high cards that may work against you more than it may help you because high cards are extra points for your opponents in the case that you lose the round.
+
+After this agent was built, we had to add a non-determinism element or else two of these agents playing each other would sometmes result in both agents taking a card from the discard pile and then discarding that same card (which is allowed by game rules) and ending up in an infinite loop. This non-determinism also helps to reduce the overall predictability of the agent, making it harder to play against because other agents would have to screen out the noise from the non-determinism.
+
+HEURISTIC AGENT V3
+Result: KO'd v2 of the heuristic agent (~100% win rate)
+
+We experimented with more rules and added and tuned specific parameters to optimize our agent. For instance, a rule was added that if opponent has more than 3 cards in hand (they're not close to winning), don't discard cards that contribute to a run or set draw where we're defining run draws to be two consecutive cards of the same suit and a set draw to be a pair.
+
+The idea is that you discard higher value cards to minimize score you give opponent in case that you lose. But if the opponent doesn't seem close to winning, which is well-correlated with the number of cards they have left since melding is required if possible, then we can wait and see if we can make a run or set with higher rank cards.
+
+Heuristic Agent V4 (FINAL VERSION)
+Result: Beat v3 of heuristic agent (~54% win rate) via use of discard list
+
+One piece of information that the previous heuristic agents weren't utilizing yet was the discard pile. There's no easy way to access the discard pile as you're not allowed to look at any cards in the discard pile besides the first card by the game rules. So this agent tracked the discard pile by keeping track that it updates after its own moves but also after opponent moves by looking at changes in the size of the stock pile. The logic was difficult to work and reason out and we ran into issues like duplicate cards in the discard pile list and not clearing the list at the right times before we fixed them.
+
+Any uses of discard pile for trying to figure out what to discard were overpowered by the card ranking rule, so we turned to the draw strategy. Initially, the uses of the discard pile was also overpowered by the rule of choosing the card that had a lower value EV. So instead of trying to fit this rule, we used our new information to buff up this rule even more. In particular, we used the information of our hand, the cards that were melded, and the cards in the discard pile. The cards in the 52-card deck but not in those piles are probabilistically equally likely to be drawn from the stock pile, so the EV of a stock pile draw was calculated. Ultimately, the agent would pick the option with the lower expected rank value (EV from the stock pile and exact value from top card of discard pile). The heuristic agent was already pretty strong at this point, so the improvement was more marginal than the improvement in previous version jumps.
+###################################################################################################################################################
+4) MCTS agent implementation and thoughts
+QUICK SUMMARY
+Draw-only agent: uses MCTS for the draw policy assuming a random discard policy during playout simulation, and a random policy for the discard policy.
+Bilinear agent: uses MCTS for the draw policy first assuming a random discard policy during playout simulation, and a subsequent MCTS discard policy assuming a random draw policy during playout simulation. 
+
 The first hardship comes from integrating MCTS into a game set up under the "policy" structure. This means transforming the game into MCTS states and shaping some of the factors. Techncially, this means integrating both MCTS execution and general game execution via some structure blending which took effort to think through. For example, I had to divide and modularize the Rummy game code into different levels of granularity that the MCTS can use for the playout, as well as helper functions that it borrows for its state status calculation. It's like having one running instance of the game, but at each step when you need a policy, the information from the policy is extracted and built into a state that is then used for MCTS simulation for that policy. This isn't as bad as coming up with the thoughts to develop a proper MCTS approach, though. For each player's turn, there are two policies needed: draw policy and meld/discard policy. They happen sequentially within the same turn by a player's hand, but then the first policy's result affects the second policy's computation so they need to be treated independently. Since the game is imperfect information with lots of randomness in drawing, it's hard to playout opponent's state assuming optimality like minimax. So we chose a single player MCTS approach such that for the policy that the MCTS is working on, we are going to generate a random sets of not-visible cards based on the current observation of the board to be divided into the assumed_stock and assumed_discard sets, then just have the agent MCTS playout solely by himself from this state with these assumed decks, MCTSing the target policy and randomizing the other at each step. We are doing so because the game is imperfect information, so we are assuming a MDP agent that's only able to infer present state from present information, which is why we are using this random assumption of unseen cards to "mask" the information which could've been otherwise directly grabbed from the game instance, in order to make the game fitting to the realistic version. The reward is cleverly shaped into disliking tie and preferring a shorter number of turns needed to finish. We had to decide on the grandularity of the MCTS playout based on our design, the game can be divided into many steps: an entire one playthrough of the game, each round of the game, each circle of turns from all players, and each turn from one player. We chose the "each round of the game" option under the single-player playout assumption, which is reasonable. The base MCTS agent uses base MCTS for the draw policy that assumes a random meld/discard policy during its playout, and a random policy for the meld/discard policy. This is easier to build because the playout happens sequentially each turn with a "draw->meld/discard" pattern so I can easily call the helper function from Rummy game program. The advanced MCTS agent builds on top of that, using a base MCTS for the draw policy assuming a random meld/discard, but also a base MCTS for the meld/discard policy assuming a random draw. The advanced version uses two MCTS sequentially, hence why I named it bilinear. It's actually quite tricky to implement. The draw policy is the same as the base one, but then for the discard policy, it happens right after the draw policy, so the MCTS nodes for the discard policy assumes that at this discard node, the drawing has already been done. So for the sake of single-player playout, after many debug, I had to go back into the Rummy game program and adjust the player_move function with four new boolean parameters so that this function can be used for MCTS playout as well. But the general function and indepdence of the game isn't impacted. Essentially, the playout has to happen in a "half-step ahead" state, i.e. meld/discard (the starting point of computation) -> draw -> meld/discard -> .... -> end check. And it's pretty easy to run into logic bugs. So I had to trace the outputs and fix them one by one without disrupting the flow and independence of the Rummy game program, which took me a long long time. In the end, I was able to get this bilinear, duo-MCTS approach to work, which has enough complexity within itself to deal with.
 However, it is worth noting that there are many areas of improvements. If we use statistical card-tracking, we can generate a more accurate assumed_stack and assumed_discard piles that fit the current status of the board, instead of randomly guessing which could contain discarded cards that are not visible. But that blurs the line between perfect and imperfect information in a realistic setting, so we didn't implement that. We could also improve the reward shaping in the single-player playout so it considers more factors such as number of points of everyone, number of hands of everyone, potential number of points in everyone's hand in the end, etc. We could've also chosen a better playout strategy, but we weren't able to come up with any of them. Currently, both policies assume random of the other policy during MCTS playout, but we could've obtained a more accurate result if we use heuristic policy for the MCTS playouts, since they are more accurate given how performant the heuristic agent is and with the ability to "simulate the future." We did try using the MCTS draw policy for the MCTS discard policy's playout or the other way around, which in theory produces better result but in reality too impractical to run given the amount of compute it consumes. For example, for each state's playout, there's another MCTS instance running random (else chicken vs egg cycle) within which expands into expensive and infeasible polynomial runtime. So it's better to keep the current bilinear structure and replace with better playout simulation (all points mentioned above) instead. Furthermore, we could've applied enhancements onto the MCTS process, like AMAF or Rave. But this isn't the focus of our project as we are curious to see the integration and performance of MCTS in an imperfect information, sequentially-related policies game which we never done in class before. There is definitely much more complexity attempting to bringing MCTS into this game's decision making, which is more interesting than testing MCTS vs some enhanced version. We've designed a potential setup of integrating such, which is sufficient work given our other contributions. 
-.
-4) Result comparison and discussion
-To summarize, here are our four agents:
+###################################################################################################################################################
+5) Result comparison and discussion
+We left our agents running against each other overnight. The MCTS agents were given 0.1 seconds per move. Here were the matchups, the results (proportion of games won by the respective agent), and the # of iterations:
+NOTE: count is an upperbound, but the current average during each iteration is printed.
 
+# python test_agents.py --agent1 1 --agent2 3 --count 1000000 --time 0.1
+Simple Greedy Base vs Base MCTS: [0.18107173725151254, 0.8189282627484875], 1157 iterations
 
+# python test_agents.py --agent1 2 --agent2 3 --count 1000000 --time 0.1
+Heuristic Base vs Base MCTS: [0.9976179132920439, 0.0023820867079561697], 2099 iterations
 
-4) General hardships, after-thoughts, and experiences
+# python test_agents.py --agent1 1 --agent2 4 --count 1000000 --time 0.1
+Simple Greedy Base vs. Advanced MCTS: [0.143317230273752, 0.856682769726248], 621 iterations
 
+# python test_agents.py --agent1 2 --agent2 4 --count 1000000 --time 0.1
+Heuristic Base vs Advanced MCTS: [0.9981325863678805, 0.0018674136321195146], 1071 iterations
 
-Too much randomness. 
-Deep copy takes runtime, also variance.
+Even though the MCTS agents don't work with much game information and conducts random playouts (and Simple Greedy Base is not a random policy), the MCTS agents still beat the Simple Greedy Base pretty easily. This shows the power of Monte Carlo simulations in informing game strategy. Even though it doesn't use much information and doesn't at all know the opponent's strategy, it still gives a strong indication of what moves are good and what moves aren't.
 
-MCTS slow due to the fact that we have to deepcopy lists of cards for every game states at every node, in order for the references to not mess up.
-And the uncertainty number of turns during a playout introduces high variance. On average, it takes about 5 seconds for the MCTS agent (settings below) to compute one game against a Random agent, currently.B
+In our tests with Base MCTS against Advanced MCTS, it was the case that Advanced MCTS was stronger. This was confirmed by the results shown above. In particular, the Base MCTS won ~82% of games against the Simple Greedy Base, while the Advanced MCTS won ~86% of games against the Simple Greedy Base (86% > 82%). 
 
-Problem: way too much variance; really hard to control the length of playout. If playout shuts down midway then it's worthless, so even with a short time limit, a playout still could take really really long.
+Both MCTS agents were beaten pretty badly by the Heuristic Base, which is reasonable since the MCTS agents are doing random playouts (plus a somewhat random deck assumption) with little game specific information and the Heuristic Base uses very specific rules and strategies with knowledge and careful human analysis of the game. Given more time, we could look at the MCTS agents using heuristic-based policies for playouts. This would likely beat the Heuristic Base and be the strongest set of agents yet.
 
-Even with base MCTS on draw_policy only and random discard_policy, and 0.01s compute time for MCTS, and random assumption of unknown cards,
-random agent is getting destroyed 90% of the time.
+We didn't include vs. Random agent in our results because it is trivial. Every agent beats random agent by at least 90%+ based on quick evaluations. Random agent is primarily used for code tuning and quick benchmarking to confirm agent validity (random agent is like the base-baseline agent that you have to beat for your agent to "work correctly"). For example, even with base MCTS on draw_policy only and random discard_policy, and 0.01s compute time for MCTS, and random assumption of unknown cards, random agent is getting destroyed 90%+ of the time.
 
+So to briefly summarize, it's possible to implement this bilinear MCTS pipeline for imperfect-information, sequentially-step game where one policy uses the MCTS and assumes the other dependent ones to be random during playout. It has a decent performance. But we believe it could be much better if it assumes other dependent ones with robust, efficient heuristics during playout, thus achieving both efficiency and performance. 
 
+# IMPORTANT NOTE
+MCTS agents are slow due to the fact that we have to deepcopy lists of cards for every game states at every node, in order for the references to not mess up. And the uncertainty number of turns during a playout introduces high variance. Due to the random nature even in playout, it's hard to control the length of the playout since a single-playe round can either end in 1-2 rounds or up till hundreds (tie condition in the most suboptimal case). If a playout runs out of resources and shuts down midway, then it's worthless. So even with a short time limit, a single playout could still take a long time to complete, which we unfortunately don't have a way to account for besides changing up the playout structure. So our 'time' parameter can seem inconsistent since the overshoot can vary for so long. Though it does help in as it checks for budget usage after playout's completion. Also, 1 iteration/count of the game between two agents can take even longer if both agents are using MCTs.
+The ranking of the agent speed is (fastest to slowest): Random > Simple Greedy > Heuristic > Base MCTS > Advanced MCTS.
+###################################################################################################################################################
+6) Other thoughts
+This was a fun project. We are really grateful for the Raise Exception game-rule enforcements in the Rummy game code as they not only make the game more robust, but also helps us catch error in our agent implementation many times, alongside these helpful print statements. (Reminder: we coded the entire game from scratch; so we are the ones that added these checks in as a good practice)
 
-Really grate for the raise exceptions.
+This was a fun semester of CPSC574/474. We are really grateful for all the time course staff, TAs, ULAs, and Professor Glenn placed in shaping the course. It was fun attending lectures and playing the games out during them. We hope this project can bring some impact towards further investigations of the field in future coursework!
